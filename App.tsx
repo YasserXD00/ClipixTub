@@ -5,15 +5,15 @@ import { DownloadOptions } from './components/DownloadOptions';
 import { PlaylistView } from './components/PlaylistView';
 import { HistoryView } from './components/HistoryView';
 import { getContentMetadata } from './services/geminiService';
-import { ContentMetadata, AppState, DownloadOption, PlaylistItem, HistoryItem, DownloadPhase } from './types';
-import { CloudDownload, Link, Loader2, CheckCircle, ArrowRight, ShieldCheck, Download, History, Cpu, Database, Settings, Sparkles } from 'lucide-react';
+import { ContentMetadata, AppState, DownloadOption, PlaylistItem, HistoryItem, DownloadPhase, LogEntry } from './types';
+import { CloudDownload, Link, Loader2, CheckCircle, ArrowRight, ShieldCheck, Download, History, Cpu, Terminal, Code2, Sparkles } from 'lucide-react';
 
 export default function App() {
   const [url, setUrl] = React.useState('');
   const [appState, setAppState] = React.useState<AppState>(AppState.IDLE);
   const [metadata, setMetadata] = React.useState<ContentMetadata | null>(null);
   const [downloadProgress, setDownloadProgress] = React.useState(0);
-  const [downloadPhase, setDownloadPhase] = React.useState<DownloadPhase>('SCRAPING');
+  const [logs, setLogs] = React.useState<LogEntry[]>([]);
   const [errorMsg, setErrorMsg] = React.useState('');
   
   const [activeTab, setActiveTab] = React.useState<'home' | 'history'>('home');
@@ -23,10 +23,16 @@ export default function App() {
   });
 
   const intervalRef = React.useRef<number | null>(null);
+  const logsEndRef = React.useRef<HTMLDivElement>(null);
 
   React.useEffect(() => {
     localStorage.setItem('clipix_history', JSON.stringify(history));
   }, [history]);
+
+  // Auto-scroll logs
+  React.useEffect(() => {
+    logsEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [logs]);
 
   const addToHistory = (item: Omit<HistoryItem, 'id' | 'timestamp'>) => {
     const newItem: HistoryItem = {
@@ -50,48 +56,71 @@ export default function App() {
       setMetadata(data);
       setAppState(AppState.READY);
     } catch (err) {
-      setErrorMsg("Scraper failed to extract stream manifests. Please check the URL.");
+      setErrorMsg("Python backend unreachable. Could not resolve URL metadata.");
       setAppState(AppState.ERROR);
     }
+  };
+
+  const addLog = (message: string, type: 'info' | 'success' | 'warning' = 'info') => {
+    const now = new Date();
+    const timeString = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}.${now.getMilliseconds().toString().padStart(3, '0')}`;
+    setLogs(prev => [...prev, { timestamp: timeString, message, type }]);
   };
 
   const simulateDownload = (filename: string, historyData?: Omit<HistoryItem, 'id' | 'timestamp'>) => {
     setAppState(AppState.DOWNLOADING);
     setDownloadProgress(0);
-    setDownloadPhase('SCRAPING');
+    setLogs([]);
+    addLog('Initializing Python 3.11 Environment...', 'info');
 
     if (intervalRef.current) clearInterval(intervalRef.current);
 
+    let step = 0;
+    const totalSteps = 100;
+
     intervalRef.current = window.setInterval(() => {
       setDownloadProgress((prev) => {
-        const next = prev + Math.random() * 8;
+        const next = prev + Math.random() * 2; // Slower, more realistic for "terminal"
         
-        // Phase logic based on progress
-        if (next < 25) setDownloadPhase('SCRAPING');
-        else if (next < 60) setDownloadPhase('FETCHING');
-        else if (next < 95) setDownloadPhase('TRANSCODING');
-        else setDownloadPhase('FINALIZING');
+        // Python Log Simulation Logic
+        if (Math.floor(next) > step) {
+          step = Math.floor(next);
+          
+          if (step === 5) addLog('import requests, json, ffmpeg', 'info');
+          if (step === 10) addLog(`requests.get('${url.substring(0, 30)}...')`, 'info');
+          if (step === 15) addLog('Response: 200 OK. Parsing HTML...', 'success');
+          if (step === 25) addLog('Finding adaptive streams (HLS/DASH)...', 'info');
+          if (step === 35) addLog('Stream found: video/mp4 [1080p] + audio/mp4 [128kbps]', 'success');
+          if (step === 45) addLog('Merging video and audio streams...', 'warning');
+          if (step === 55) addLog('Starting FFmpeg subprocess...', 'info');
+          if (step === 65) addLog('ffmpeg -i video.tmp -i audio.tmp -c:v copy -c:a aac output.mp4', 'info');
+          if (step === 75) addLog('Transcoding frame 10452/15000...', 'info');
+          if (step === 85) addLog('Transcoding frame 14900/15000...', 'info');
+          if (step === 95) addLog('Finalizing container. Cleaning temp files...', 'warning');
+        }
 
         if (next >= 100) {
           if (intervalRef.current) clearInterval(intervalRef.current);
+          addLog('Process exited with code 0.', 'success');
+          
           setTimeout(() => {
              setAppState(AppState.COMPLETED);
              if (historyData) addToHistory(historyData);
              
              // Trigger dummy download
-             const blob = new Blob(["ClipixTub Processed Media Data"], { type: 'text/plain' });
+             const blob = new Blob(["ClipixTub Python Processed Data"], { type: 'text/plain' });
              const url = window.URL.createObjectURL(blob);
              const a = document.createElement('a');
              a.href = url;
              a.download = filename;
              a.click();
              window.URL.revokeObjectURL(url);
-          }, 300);
+          }, 800);
           return 100;
         }
         return next;
       });
-    }, 180);
+    }, 80);
   };
 
   const handleDownloadOption = (option: DownloadOption) => {
@@ -112,26 +141,9 @@ export default function App() {
     setAppState(AppState.IDLE);
     setMetadata(null);
     setDownloadProgress(0);
+    setLogs([]);
     setActiveTab('home');
     if (intervalRef.current) clearInterval(intervalRef.current);
-  };
-
-  const getPhaseIcon = () => {
-    switch(downloadPhase) {
-      case 'SCRAPING': return <Database className="w-8 h-8 text-brand-500 animate-pulse" />;
-      case 'FETCHING': return <CloudDownload className="w-8 h-8 text-blue-500 animate-bounce" />;
-      case 'TRANSCODING': return <Cpu className="w-8 h-8 text-purple-500 animate-spin" />;
-      case 'FINALIZING': return <Settings className="w-8 h-8 text-emerald-500 animate-spin" />;
-    }
-  };
-
-  const getPhaseLabel = () => {
-    switch(downloadPhase) {
-      case 'SCRAPING': return 'Extracting Streaming Protocols...';
-      case 'FETCHING': return 'Fetching Encrypted Packets...';
-      case 'TRANSCODING': return 'FFmpeg Engine: High-Quality Transcoding...';
-      case 'FINALIZING': return 'Rebuilding Container & Metadata...';
-    }
   };
 
   return (
@@ -145,11 +157,11 @@ export default function App() {
         <div className="flex items-center gap-3 cursor-pointer group" onClick={reset}>
           <div className="relative">
              <CloudDownload className="w-10 h-10 text-brand-600 dark:text-brand-500 fill-brand-100/20 group-hover:scale-110 transition-transform" />
-             <div className="absolute -bottom-1 -right-1 bg-black text-white text-[8px] font-bold px-1 py-0.5 rounded">HD</div>
+             <div className="absolute -bottom-1 -right-1 bg-black text-white text-[8px] font-bold px-1 py-0.5 rounded">PY</div>
           </div>
           <div>
             <h1 className="text-2xl font-black tracking-tighter text-slate-900 dark:text-white group-hover:text-brand-600 transition-colors">ClipixTub</h1>
-            <p className="text-[10px] font-medium text-slate-400 uppercase tracking-widest hidden sm:block">Scraping & Encoding Engine</p>
+            <p className="text-[10px] font-medium text-slate-400 uppercase tracking-widest hidden sm:block">Python Native Engine</p>
           </div>
         </div>
 
@@ -175,9 +187,9 @@ export default function App() {
                 Download All types of Youtube content and convert to all formats with all qualities.
               </p>
               <div className="flex items-center justify-center gap-8 mb-12 flex-wrap">
-                 <span className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-widest"><Sparkles className="w-4 h-4 text-brand-500" /> 4K Resolution</span>
-                 <span className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-widest"><Sparkles className="w-4 h-4 text-brand-500" /> MP3 320kbps</span>
-                 <span className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-widest"><Sparkles className="w-4 h-4 text-brand-500" /> FFmpeg Powered</span>
+                 <span className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-widest"><Terminal className="w-4 h-4 text-brand-500" /> Python Native</span>
+                 <span className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-widest"><Sparkles className="w-4 h-4 text-brand-500" /> 4K Support</span>
+                 <span className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-widest"><Cpu className="w-4 h-4 text-brand-500" /> FFmpeg Encoding</span>
               </div>
             </div>
 
@@ -189,19 +201,22 @@ export default function App() {
                   placeholder="Paste YouTube Video, Short, or Playlist URL..."
                   value={url}
                   onChange={(e) => setUrl(e.target.value)}
-                  className="w-full pl-16 pr-36 py-6 bg-white dark:bg-slate-900 rounded-full border-2 border-slate-100 dark:border-slate-800 focus:border-brand-500 shadow-2xl shadow-brand-500/5 text-lg font-medium outline-none transition-all text-slate-900 dark:text-white"
+                  className="w-full pl-16 pr-36 py-6 bg-white dark:bg-slate-900 rounded-full border-2 border-slate-100 dark:border-slate-800 focus:border-brand-500 shadow-2xl shadow-brand-500/5 text-lg font-medium outline-none transition-all text-slate-900 dark:text-white font-mono"
                 />
-                <button type="submit" disabled={!url} className="absolute inset-y-2 right-2 px-8 rounded-full bg-brand-600 hover:bg-brand-700 text-white font-bold transition-all shadow-lg shadow-brand-500/20">SCRAPE <ArrowRight className="ml-2 w-5 h-5 inline" /></button>
+                <button type="submit" disabled={!url} className="absolute inset-y-2 right-2 px-8 rounded-full bg-brand-600 hover:bg-brand-700 text-white font-bold transition-all shadow-lg shadow-brand-500/20 flex items-center gap-2">
+                   <Code2 className="w-5 h-5" /> PROCESS
+                </button>
               </form>
             )}
 
             {appState === AppState.ANALYZING && (
               <div className="flex flex-col items-center mt-20 animate-fade-in">
-                <div className="relative">
-                  <div className="w-20 h-20 border-4 border-slate-100 dark:border-slate-800 rounded-full"></div>
-                  <div className="absolute top-0 left-0 w-20 h-20 border-4 border-brand-500 rounded-full border-t-transparent animate-spin"></div>
+                <div className="bg-slate-900 text-green-400 p-6 rounded-xl font-mono text-sm w-full max-w-md shadow-2xl border border-slate-800">
+                   <p className="animate-pulse">&gt; Initializing Python environment...</p>
+                   <p className="opacity-75">&gt; Loading extractors...</p>
+                   <p className="opacity-50">&gt; Connecting to youtube...</p>
                 </div>
-                <p className="mt-8 text-slate-900 dark:text-white font-bold animate-pulse text-lg">Scraping Manifests & Stream Data...</p>
+                <p className="mt-8 text-slate-900 dark:text-white font-bold animate-pulse text-lg">Resolving Metadata...</p>
               </div>
             )}
 
@@ -211,8 +226,8 @@ export default function App() {
                   <button onClick={reset} className="text-sm font-bold text-slate-400 hover:text-brand-500 flex items-center gap-2 transition-colors uppercase tracking-widest">
                     <ArrowRight className="w-4 h-4 rotate-180" /> Change Content
                   </button>
-                  <div className="flex items-center gap-1.5 text-xs font-bold px-3 py-1 bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400 rounded-full">
-                    <ShieldCheck className="w-3.5 h-3.5" /> Engine Ready
+                  <div className="flex items-center gap-1.5 text-xs font-bold px-3 py-1 bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400 rounded-full">
+                    <Terminal className="w-3.5 h-3.5" /> Python v3.11.4
                   </div>
                 </div>
 
@@ -232,27 +247,31 @@ export default function App() {
                   )}
 
                   {(appState === AppState.DOWNLOADING || appState === AppState.COMPLETED) && (
-                    <div className="mt-8 bg-white dark:bg-slate-900 rounded-3xl p-12 shadow-2xl border border-slate-100 dark:border-slate-800 text-center animate-slide-up relative overflow-hidden">
-                        <div className="absolute top-0 left-0 w-full h-1 bg-slate-100 dark:bg-slate-800">
-                          <div className="h-full bg-brand-500 transition-all duration-300" style={{ width: `${downloadProgress}%` }} />
-                        </div>
+                    <div className="mt-8 bg-slate-950 rounded-3xl p-6 md:p-10 shadow-2xl border border-slate-800 text-left animate-slide-up relative overflow-hidden font-mono">
                         {appState === AppState.DOWNLOADING ? (
                           <>
-                            <div className="flex justify-center mb-8">{getPhaseIcon()}</div>
-                            <h3 className="text-5xl font-black text-slate-900 dark:text-white mb-2">{Math.round(downloadProgress)}%</h3>
-                            <p className="text-brand-600 dark:text-brand-400 font-bold uppercase tracking-widest text-sm mb-6">{getPhaseLabel()}</p>
-                            <div className="w-full max-w-md mx-auto h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                              <div className="h-full bg-brand-500 transition-all duration-300" style={{ width: `${downloadProgress}%` }} />
+                            <div className="flex items-center justify-between mb-4 border-b border-slate-800 pb-2">
+                               <span className="text-slate-400 text-xs">root@clipixtub:~# python3 engine.py --url "{url.substring(0,25)}..."</span>
+                               <span className="text-brand-500 font-bold">{Math.round(downloadProgress)}%</span>
+                            </div>
+                            <div className="h-64 overflow-y-auto space-y-1 pr-2 scrollbar-hide text-sm">
+                               {logs.map((log, i) => (
+                                 <div key={i} className={`flex gap-2 ${log.type === 'error' ? 'text-red-400' : log.type === 'warning' ? 'text-yellow-400' : log.type === 'success' ? 'text-green-400' : 'text-slate-300'}`}>
+                                    <span className="opacity-50 text-xs select-none">[{log.timestamp}]</span>
+                                    <span>{log.message}</span>
+                                 </div>
+                               ))}
+                               <div ref={logsEndRef} />
                             </div>
                           </>
                         ) : (
-                          <div className="py-8 text-center">
-                            <div className="w-24 h-24 bg-green-50 dark:bg-green-900/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                          <div className="py-8 text-center font-sans">
+                            <div className="w-24 h-24 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
                               <CheckCircle className="w-12 h-12 text-green-500" />
                             </div>
-                            <h3 className="text-3xl font-black text-slate-900 dark:text-white mb-2">Transcoding Complete</h3>
-                            <p className="text-slate-500 dark:text-slate-400 mb-8 max-w-md mx-auto">The media file has been encoded using FFmpeg-v6 and is now saved to your device.</p>
-                            <button onClick={reset} className="px-12 py-4 bg-brand-600 hover:bg-brand-700 text-white font-bold rounded-xl shadow-xl transition-all hover:scale-105">New Download</button>
+                            <h3 className="text-3xl font-black text-white mb-2">Process Completed</h3>
+                            <p className="text-slate-400 mb-8 max-w-md mx-auto">The Python script exited successfully. Media file generated.</p>
+                            <button onClick={reset} className="px-12 py-4 bg-brand-600 hover:bg-brand-700 text-white font-bold rounded-xl shadow-xl transition-all hover:scale-105">New Process</button>
                           </div>
                         )}
                     </div>
@@ -271,7 +290,7 @@ export default function App() {
       </main>
 
       <footer className="w-full py-8 text-center text-slate-400 text-xs font-bold uppercase tracking-widest border-t border-slate-100 dark:border-slate-900/50">
-        <p>© 2025 ClipixTub Engine. All rights reserved.</p>
+        <p>© 2025 ClipixTub. Powered by Python.</p>
       </footer>
     </div>
   );

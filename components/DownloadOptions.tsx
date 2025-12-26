@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { DownloadOption, ContentMetadata } from '../types';
-import { Download, FileVideo, Music, Captions, Zap } from 'lucide-react';
+import { Download, FileVideo, Music, Captions, Zap, Code } from 'lucide-react';
 
 interface DownloadOptionsProps {
   metadata: ContentMetadata;
@@ -8,9 +8,9 @@ interface DownloadOptionsProps {
 }
 
 const scraperOptions: DownloadOption[] = [
-  { id: 'mp4-4k', label: 'MP4 Video (4K)', subLabel: 'Ultra HD • 60fps', size: '420 MB', type: 'video', format: 'mp4', badge: 'UHD' },
-  { id: 'mp4-1080', label: 'MP4 Video (1080p)', subLabel: 'High Definition', size: '145 MB', type: 'video', format: 'mp4', badge: 'HD' },
-  { id: 'mp3-hq', label: 'MP3 Audio (320kbps)', subLabel: 'Studio Quality', size: '12 MB', type: 'audio', format: 'mp3', badge: 'PRO' },
+  { id: 'mp4-4k', label: 'MP4 Video (4K)', subLabel: 'Python Transcode • 60fps', size: '420 MB', type: 'video', format: 'mp4', badge: 'PRO' },
+  { id: 'mp4-1080', label: 'MP4 Video (1080p)', subLabel: 'Direct Stream', size: '145 MB', type: 'video', format: 'mp4', badge: 'HD' },
+  { id: 'mp3-hq', label: 'MP3 Audio (320kbps)', subLabel: 'FFmpeg Extract', size: '12 MB', type: 'audio', format: 'mp3', badge: 'HQ' },
   { id: 'mp3-std', label: 'MP3 Audio (128kbps)', subLabel: 'Standard Quality', size: '4 MB', type: 'audio', format: 'mp3' },
 ];
 
@@ -19,8 +19,8 @@ export const DownloadOptions: React.FC<DownloadOptionsProps> = ({ metadata, onDo
     <div className="w-full mt-8 animate-fade-in space-y-8">
       <div>
         <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
-          <Zap className="w-5 h-5 text-brand-500" />
-          Extracted Streams
+          <Code className="w-5 h-5 text-brand-500" />
+          Python Processed Formats
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {scraperOptions.map((option) => (

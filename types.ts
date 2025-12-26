@@ -54,4 +54,10 @@ export enum AppState {
   ERROR = 'ERROR'
 }
 
-export type DownloadPhase = 'SCRAPING' | 'FETCHING' | 'TRANSCODING' | 'FINALIZING';
+export type DownloadPhase = 'PYTHON_INIT' | 'REQUESTS_GET' | 'STREAM_PARSE' | 'FFMPEG_ENCODE';
+
+export interface LogEntry {
+  timestamp: string;
+  message: string;
+  type: 'info' | 'success' | 'warning' | 'error';
+}
