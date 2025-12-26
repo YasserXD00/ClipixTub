@@ -1,7 +1,7 @@
 export interface SubtitleTrack {
   lang: string;
   label: string;
-  format: string; // 'srt' | 'vtt'
+  format: string;
 }
 
 export interface PlaylistItem {
@@ -20,11 +20,10 @@ export interface ContentMetadata {
   duration?: string;
   description: string;
   thumbnailUrl?: string;
-  // For videos
   subtitles?: SubtitleTrack[];
-  // For playlists/channels
   itemCount?: number;
   items?: PlaylistItem[];
+  streamUrl?: string; // Mocked stream source
 }
 
 export interface DownloadOption {
@@ -44,7 +43,6 @@ export interface HistoryItem {
   format?: string;
   timestamp: number;
   thumbnailUrl?: string;
-  // Removed optional fields to match usage
 }
 
 export enum AppState {
@@ -55,3 +53,5 @@ export enum AppState {
   COMPLETED = 'COMPLETED',
   ERROR = 'ERROR'
 }
+
+export type DownloadPhase = 'SCRAPING' | 'FETCHING' | 'TRANSCODING' | 'FINALIZING';
