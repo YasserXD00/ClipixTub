@@ -1,0 +1,5 @@
+{
+  "name": "ClipixTub",
+  "description": "ClipixTub is a powerful, Python-native media engine for downloading and converting YouTube content. Featuring real-time FFmpeg transcoding, it supports 4K Video, Shorts, Playlists, and high-fidelity 320kbps MP3 audio extraction—all with a professional terminal-style interface.",
+  "requestFramePermissions": []
+}

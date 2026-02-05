@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ClipixTub - Python Native Downloader & Converter</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <meta name="description"
+    content="ClipixTub is a powerful, Python-native media engine for downloading and converting YouTube content. Featuring real-time FFmpeg transcoding, it supports 4K Video, Shorts, Playlists, and high-fidelity 320kbps MP3 audio extraction." />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#fff5f5', 100: '#fed7d7', 200: '#feb2b2', 300: '#fc8181',
+              400: '#f56565', 500: '#E60000', 600: '#c53030', 700: '#9b2c2c',
+              800: '#822727', 900: '#742a2a',
+            },
+            slate: { 950: '#000000', 900: '#121212', 800: '#1e1e1e' }
+          },
+          animation: {
+            'fade-in': 'fadeIn 0.5s ease-out forwards',
+            'slide-up': 'slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+            'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+            'float': 'float 6s ease-in-out infinite',
+            'shimmer': 'shimmer 3s linear infinite',
+            'particle': 'particle 15s linear infinite',
+          },
+          keyframes: {
+            fadeIn: { '0%': { opacity: '0', transform: 'scale(0.95)' }, '100%': { opacity: '1', transform: 'scale(1)' } },
+            slideUp: { '0%': { transform: 'translateY(30px)', opacity: '0' }, '100%': { transform: 'translateY(0)', opacity: '1' } },
+            float: { '0%, 100%': { transform: 'translateY(0) rotate(0deg)' }, '50%': { transform: 'translateY(-20px) rotate(2deg)' } },
+            shimmer: {
+              '0%': { backgroundPosition: '-200% 0' },
+              '100%': { backgroundPosition: '200% 0' }
+            },
+            particle: {
+              '0%': { transform: 'translateY(0) translateX(0) rotate(0deg)', opacity: 0 },
+              '10%': { opacity: 0.2 },
+              '90%': { opacity: 0.2 },
+              '100%': { transform: 'translateY(-100vh) translateX(50px) rotate(360deg)', opacity: 0 }
+            }
+          }
+        },
+      },
+    };
+  </script>
+  <style>
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #d1d5db;
+      border-radius: 4px;
+    }
+
+    .dark ::-webkit-scrollbar-thumb {
+      background: #333;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #ef4444;
+    }
+
+    body {
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    .brand-text-shimmer {
+      background: linear-gradient(90deg, #E60000 0%, #ff4d4d 25%, #E60000 50%, #ff4d4d 75%, #E60000 100%);
+      background-size: 200% auto;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: shimmer 4s linear infinite;
+      text-shadow: 0 10px 30px rgba(230, 0, 0, 0.2);
+    }
+
+    .glass-card {
+      background: rgba(255, 255, 255, 0.7);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+
+    .dark .glass-card {
+      background: rgba(18, 18, 18, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .particles {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: -1;
+      overflow: hidden;
+    }
+
+    .particle {
+      position: absolute;
+      bottom: -10px;
+      background: rgba(230, 0, 0, 0.1);
+      border-radius: 50%;
+      animation: particle 15s linear infinite;
+    }
+
+    .dark .particle {
+      background: rgba(230, 0, 0, 0.05);
+    }
+  </style>
+  <script type="importmap">
+      {
+        "imports": {
+          "react/": "https://esm.sh/react@^19.2.3/",
+          "react": "https://esm.sh/react@^19.2.3",
+          "@google/genai": "https://esm.sh/@google/genai@^1.34.0",
+          "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+          "lucide-react": "https://esm.sh/lucide-react@^0.562.0"
+        }
+      }
+    </script>
+</head>
+
+<body
+  class="bg-white text-black dark:bg-slate-950 dark:text-white antialiased overflow-x-hidden selection:bg-brand-500 selection:text-white">
+  <div id="root"></div>
+
+  <div class="particles" id="particles-container"></div>
+
+  <script>
+    const container = document.getElementById('particles-container');
+    const count = 20;
+    for (let i = 0; i < count; i++) {
+      const p = document.createElement('div');
+      p.className = 'particle';
+      const size = Math.random() * 20 + 10 + 'px';
+      p.style.width = size;
+      p.style.height = size;
+      p.style.left = Math.random() * 100 + 'vw';
+      p.style.animationDelay = Math.random() * 15 + 's';
+      p.style.animationDuration = Math.random() * 10 + 10 + 's';
+      container.appendChild(p);
+    }
+  </script>
+
+  <script type="module" src="/index.tsx"></script>
+
+</body>
+
+</html>
