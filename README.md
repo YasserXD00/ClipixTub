@@ -74,3 +74,23 @@ npm run dev
 - If you plan to deploy, secure the backend endpoints and consider usage limits to avoid abuse.
 
 If you want, I can also add a short example of a direct API call (curl) or update the README with environment variable configuration. 
+
+**Production (gunicorn)**
+
+- A gunicorn configuration and helper runner script are included in the `backend/` folder:
+	- `backend/gunicorn_conf.py` — gunicorn settings (bind, workers, worker class).
+	- `backend/run_gunicorn.py` — helper script that runs gunicorn with `uvicorn.workers.UvicornWorker`.
+
+- To run with gunicorn (from the repository root):
+
+```bash
+python backend/run_gunicorn.py
+```
+
+- Or run gunicorn directly (from `backend/`):
+
+```bash
+gunicorn -k uvicorn.workers.UvicornWorker -w 4 server:app -b 0.0.0.0:8000 --config gunicorn_conf.py
+```
+
+Note: `gunicorn` typically runs on Unix-like systems. For local Windows development, continue using `python backend/run_uvicorn.py` or `uvicorn` directly.
