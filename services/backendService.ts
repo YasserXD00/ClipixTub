@@ -1,4 +1,4 @@
-const API_BASE = import.meta.env.VITE_BACKEND_URL || 'https://clipixtub.onrender.com';
+import { API_BASE } from './config';
 
 type StartResp = { status: string; job_id?: string };
 

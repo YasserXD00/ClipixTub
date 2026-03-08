@@ -8,6 +8,7 @@ import { AboutView } from './components/AboutView';
 import { getContentMetadata } from './services/geminiService';
 import { ContentMetadata, AppState, DownloadOption, PlaylistItem, HistoryItem, LogEntry } from './types';
 import { startDownload, getLogs, getStatus } from './services/backendService';
+import { API_BASE } from './services/config';
 import { CloudDownload, Link, CheckCircle, ArrowRight, Terminal, Code2, Sparkles, Cpu, Info, History, Download, Coffee, Sun, Moon, Sunrise, Sunset, Users, Activity, BarChart3, Github, MousePointer2, ChevronRight } from 'lucide-react';
 import { motion, AnimatePresence, useScroll, useTransform, useMotionTemplate, useMotionValue } from 'framer-motion';
 
@@ -94,8 +95,7 @@ export default function App() {
 
     const fetchStats = async () => {
       try {
-        const baseUrl = (import.meta as any).env.VITE_BACKEND_URL || 'https://clipixtub.onrender.com';
-        const res = await fetch(`${baseUrl}/stats`);
+        const res = await fetch(`${API_BASE}/stats`);
         if (res.ok) {
           const data = await res.json();
           setStats(data);
@@ -291,8 +291,7 @@ export default function App() {
                 addToHistory({ title: metadata.title, type: option.type, format: option.format, thumbnailUrl: metadata.thumbnailUrl });
                 try {
                   // fetch the real file from backend
-                  const backendBaseUrl = (import.meta as any).env.VITE_BACKEND_URL || 'https://clipixtub.onrender.com';
-                  const fileResp = await fetch(`${backendBaseUrl}/files/${jobId}`);
+                  const fileResp = await fetch(`${API_BASE}/files/${jobId}`);
                   if (fileResp.ok) {
                     const blob = await fileResp.blob();
                     const dlUrl = window.URL.createObjectURL(blob);

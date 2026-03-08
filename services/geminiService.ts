@@ -1,7 +1,6 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { ContentMetadata, TrendingVideo } from "../types";
-
-const API_BASE = (import.meta as any).env.VITE_BACKEND_URL || 'http://localhost:8000';
+import { API_BASE, GEMINI_API_KEY } from "./config";
 
 const extractYouTubeId = (url: string): string | null => {
   const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=|shorts\/)([^#&?]*).*/;
@@ -37,7 +36,7 @@ const getContentMetadata = async (url: string): Promise<ContentMetadata> => {
     }
   }
 
-  const apiKey = (import.meta as any).env.VITE_GEMINI_API_KEY || '';
+  const apiKey = GEMINI_API_KEY;
   if (!apiKey) {
     throw new Error("Python backend unreachable and Gemini API Key is missing. Could not resolve URL metadata.");
   }
@@ -181,9 +180,6 @@ const VIDEO_SCHEMA = {
 
 const getTrendingVideos = async (): Promise<TrendingVideo[]> => {
   try {
-    const meta = (import.meta as any);
-    const API_BASE = meta.env.VITE_BACKEND_URL || 'http://localhost:8000';
-
     // If a backend is configured, prefer fetching trending from it (it uses
     // YouTube Data API or yt-dlp fallback) so results are real and fresh.
     if (API_BASE) {
@@ -213,7 +209,7 @@ const getTrendingVideos = async (): Promise<TrendingVideo[]> => {
       }
     }
 
-    const apiKey = meta.env.VITE_GEMINI_API_KEY || '';
+    const apiKey = GEMINI_API_KEY;
 
     if (!apiKey || apiKey === 'YOUR_GEMINI_API_KEY') return FALLBACK_TRENDING;
 
@@ -267,7 +263,7 @@ const getTrendingVideos = async (): Promise<TrendingVideo[]> => {
 const searchVideos = async (query: string): Promise<TrendingVideo[]> => {
   try {
     const meta = (import.meta as any);
-    const apiKey = meta.env.VITE_GEMINI_API_KEY || '';
+    const apiKey = GEMINI_API_KEY;
     if (!apiKey) return FALLBACK_TRENDING;
 
     const ai = new GoogleGenAI({ apiKey });
