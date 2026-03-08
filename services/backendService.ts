@@ -1,4 +1,4 @@
-const API_BASE = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000';
+const API_BASE = import.meta.env.VITE_BACKEND_URL || 'https://clipixtub.onrender.com';
 
 type StartResp = { status: string; job_id?: string };
 
@@ -9,7 +9,7 @@ interface DownloadOptions {
 }
 
 async function startDownload(
-  url: string, 
+  url: string,
   output = 'downloads',
   options?: DownloadOptions
 ): Promise<StartResp> {
@@ -17,7 +17,7 @@ async function startDownload(
   if (options?.quality) body.quality = options.quality;
   if (options?.format) body.format = options.format;
   if (options?.audioBitrate) body.audio_bitrate = options.audioBitrate;
-  
+
   const res = await fetch(`${API_BASE}/download`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },

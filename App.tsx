@@ -97,7 +97,7 @@ export default function App() {
 
     const fetchStats = async () => {
       try {
-        const baseUrl = (import.meta as any).env.VITE_BACKEND_URL || 'http://localhost:8000';
+        const baseUrl = (import.meta as any).env.VITE_BACKEND_URL || 'https://clipixtub.onrender.com';
         const res = await fetch(`${baseUrl}/stats`);
         if (res.ok) {
           const data = await res.json();
@@ -294,7 +294,8 @@ export default function App() {
                 addToHistory({ title: metadata.title, type: option.type, format: option.format, thumbnailUrl: metadata.thumbnailUrl });
                 try {
                   // fetch the real file from backend
-                  const fileResp = await fetch(`${(import.meta as any).env.VITE_BACKEND_URL || 'http://localhost:8000'}/files/${jobId}`);
+                  const backendBaseUrl = (import.meta as any).env.VITE_BACKEND_URL || 'https://clipixtub.onrender.com';
+                  const fileResp = await fetch(`${backendBaseUrl}/files/${jobId}`);
                   if (fileResp.ok) {
                     const blob = await fileResp.blob();
                     const dlUrl = window.URL.createObjectURL(blob);
