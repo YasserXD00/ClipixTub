@@ -2,11 +2,10 @@ import * as React from 'react';
 import { Terminal, Cpu, Sparkles, Github, BookOpen, Layers, ShieldCheck, Zap, Code, ChevronRight, Copy, Check, Coffee, Heart, Globe, Box } from 'lucide-react';
 import { motion } from 'framer-motion';
 
-interface AboutViewProps {
-  onDonate?: () => void;
-}
-
-export const AboutView: React.FC<AboutViewProps> = ({ onDonate }) => {
+export const AboutView: React.FC = () => {
+  const handleDonate = () => {
+    window.open('https://buymeacoffee.com/yvsr', '_blank');
+  };
   const [copied, setCopied] = React.useState(false);
 
   const pythonCode = `import os
@@ -182,7 +181,7 @@ if __name__ == "__main__":
       <motion.section
         variants={itemVariants}
         className="relative group cursor-pointer"
-        onClick={onDonate}
+        onClick={handleDonate}
       >
         <div className="absolute -inset-2 bg-gradient-to-r from-orange-500 via-brand-500 to-rose-500 rounded-[4rem] blur-2xl opacity-20 group-hover:opacity-40 transition-opacity duration-1000"></div>
         <div className="relative glass-card bg-white/80 dark:bg-slate-900/80 p-12 md:p-16 rounded-[3.5rem] border border-slate-200/50 dark:border-slate-800 flex flex-col md:flex-row items-center gap-12 text-center md:text-left">

@@ -5,8 +5,6 @@ import { DownloadOptions } from './components/DownloadOptions';
 import { PlaylistView } from './components/PlaylistView';
 import { HistoryView } from './components/HistoryView';
 import { AboutView } from './components/AboutView';
-import { DonationModal } from './components/DonationModal';
-
 import { getContentMetadata } from './services/geminiService';
 import { ContentMetadata, AppState, DownloadOption, PlaylistItem, HistoryItem, LogEntry } from './types';
 import { startDownload, getLogs, getStatus } from './services/backendService';
@@ -80,7 +78,6 @@ export default function App() {
   const [errorMsg, setErrorMsg] = React.useState('');
 
   const [activeTab, setActiveTab] = React.useState<'home' | 'history' | 'about'>('home');
-  const [showDonation, setShowDonation] = React.useState(false);
   const [history, setHistory] = React.useState<HistoryItem[]>(() => {
     const saved = localStorage.getItem('clipix_history');
     return saved ? JSON.parse(saved) : [];
@@ -458,7 +455,7 @@ export default function App() {
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              onClick={() => setShowDonation(true)}
+              onClick={() => window.open('https://buymeacoffee.com/yvsr', '_blank')}
               className="p-2.5 rounded-2xl text-slate-400 hover:text-red-500 hover:bg-red-500/10 transition-colors group relative"
               title="Donate to Support"
             >
@@ -474,7 +471,7 @@ export default function App() {
 
       <main className="flex-grow flex flex-col items-center justify-start pt-12 px-4 md:px-8 max-w-6xl mx-auto w-full z-10 pb-20">
         <ErrorBoundary>
-          {activeTab === 'about' && <AboutView onDonate={() => setShowDonation(true)} />}
+          {activeTab === 'about' && <AboutView />}
           {activeTab === 'history' && <HistoryView history={history} onClear={() => setHistory([])} />}
           {activeTab === 'home' && (
             <div className="w-full flex flex-col items-center">
@@ -563,7 +560,7 @@ export default function App() {
                 className="mt-8 flex items-center justify-center gap-6 opacity-80 hover:opacity-100 transition-opacity"
               >
                 <button
-                  onClick={() => setShowDonation(true)}
+                  onClick={() => window.open('https://buymeacoffee.com/yvsr', '_blank')}
                   className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 hover:text-red-500 dark:hover:text-red-400 transition-colors"
                 >
                   <Coffee className="w-3.5 h-3.5" />
@@ -705,7 +702,6 @@ export default function App() {
       <footer className="w-full py-8 text-center text-slate-400 text-xs font-bold uppercase tracking-widest border-t border-slate-100 dark:border-slate-900/50">
         <p>© 2025 ClipixTub. Powered by Python Engine.</p>
       </footer>
-      <DonationModal isOpen={showDonation} onClose={() => setShowDonation(false)} />
     </div>
   );
 }
