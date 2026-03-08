@@ -2,10 +2,26 @@ import * as React from 'react';
 import { TrendingVideo } from '../types';
 import { getTrendingVideos } from '../services/geminiService';
 import { Flame, Play, Eye, Clock, Loader2, Download, Sparkles } from 'lucide-react';
+import { motion, Variants } from 'framer-motion';
 
 interface TrendingViewProps {
     onSelect: (id: string) => void;
 }
+
+const containerVariants: Variants = {
+    hidden: { opacity: 0 },
+    show: {
+        opacity: 1,
+        transition: {
+            staggerChildren: 0.05
+        }
+    }
+};
+
+const itemVariants: Variants = {
+    hidden: { opacity: 0, y: 20 },
+    show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 50, damping: 20 } }
+};
 
 export const TrendingView: React.FC<TrendingViewProps> = ({ onSelect }) => {
     const [videos, setVideos] = React.useState<TrendingVideo[]>([]);
@@ -48,7 +64,7 @@ export const TrendingView: React.FC<TrendingViewProps> = ({ onSelect }) => {
 
     if (loading) {
         return (
-            <div className="w-full py-20 flex flex-col items-center justify-center animate-fade-in">
+            <div className="w-full py-20 flex flex-col items-center justify-center">
                 <Loader2 className="w-12 h-12 text-brand-500 animate-spin mb-4" />
                 <p className="text-slate-500 font-medium">Fetching global trends...</p>
             </div>
@@ -57,22 +73,31 @@ export const TrendingView: React.FC<TrendingViewProps> = ({ onSelect }) => {
 
     if (error) {
         return (
-            <div className="w-full py-20 text-center animate-fade-in">
+            <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="w-full py-20 text-center"
+            >
                 <div className="bg-red-50 dark:bg-red-900/10 p-8 rounded-3xl border border-red-100 dark:border-red-900/20 max-w-lg mx-auto">
                     <p className="text-red-600 dark:text-red-400 font-bold mb-2">Oops!</p>
                     <p className="text-red-500 dark:text-red-400/70 text-sm">{error}</p>
                     {error.toLowerCase().includes('key') && <p className="text-xs text-red-500 font-bold mt-2 animate-pulse">Please check your VITE_GEMINI_API_KEY in .env file!</p>}
                 </div>
-            </div>
+            </motion.div>
         );
     }
 
     return (
-        <div className="w-full max-w-6xl mx-auto mt-8 animate-fade-in">
+        <div className="w-full max-w-6xl mx-auto mt-8">
             <div className="flex items-center gap-3 mb-8">
-                <div className="w-12 h-12 bg-orange-100 dark:bg-orange-900/30 rounded-2xl flex items-center justify-center">
+                <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ type: "spring", stiffness: 200, damping: 10 }}
+                    className="w-12 h-12 bg-orange-100 dark:bg-orange-900/30 rounded-2xl flex items-center justify-center"
+                >
                     <Flame className="w-6 h-6 text-orange-500" />
-                </div>
+                </motion.div>
                 <div className="flex-1">
                     <div>
                         <h3 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
@@ -84,21 +109,30 @@ export const TrendingView: React.FC<TrendingViewProps> = ({ onSelect }) => {
                         </div>
                     </div>
                 </div>
-                <button
+                <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
                     onClick={fetchTrending}
                     disabled={loading}
                     className="flex items-center gap-2 px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-xl text-slate-600 dark:text-slate-300 transition-all font-black text-[10px] uppercase tracking-widest disabled:opacity-50"
                 >
                     <Loader2 className={`w-3 h-3 ${loading ? 'animate-spin' : ''}`} />
                     Refresh Trends
-                </button>
+                </motion.button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
+            <motion.div
+                variants={containerVariants}
+                initial="hidden"
+                animate="show"
+                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6"
+            >
                 {videos.map((video) => (
-                    <div
+                    <motion.div
+                        variants={itemVariants}
                         key={video.id}
-                        className="group relative bg-white dark:bg-slate-900 rounded-3xl overflow-hidden border border-slate-100 dark:border-slate-800/50 shadow-sm hover:shadow-2xl hover:-translate-y-2 transition-all duration-500"
+                        className="group relative bg-white dark:bg-slate-900 rounded-3xl overflow-hidden border border-slate-100 dark:border-slate-800/50 shadow-sm hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 cursor-pointer"
+                        onClick={() => onSelect(video.id)}
                     >
                         {/* Thumbnail */}
                         <div className="relative aspect-video overflow-hidden">
@@ -108,12 +142,13 @@ export const TrendingView: React.FC<TrendingViewProps> = ({ onSelect }) => {
                                 className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                             />
                             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors duration-300 flex items-center justify-center">
-                                <button
-                                    onClick={() => onSelect(video.id)}
+                                <motion.div
+                                    initial={{ opacity: 0, scale: 0.5 }}
+                                    whileHover={{ scale: 1.1 }}
                                     className="w-14 h-14 bg-brand-600 text-white rounded-full opacity-0 group-hover:opacity-100 scale-50 group-hover:scale-100 transition-all duration-300 shadow-xl flex items-center justify-center hover:bg-brand-500"
                                 >
                                     <Download className="w-6 h-6 fill-current" />
-                                </button>
+                                </motion.div>
                             </div>
                             <div className="absolute bottom-2 right-2 bg-black/80 backdrop-blur-md text-white text-[10px] font-bold px-2 py-1 rounded-lg flex items-center gap-1.5">
                                 <Clock className="w-3 h-3" />
@@ -136,17 +171,16 @@ export const TrendingView: React.FC<TrendingViewProps> = ({ onSelect }) => {
                                         </span>
                                     </div>
                                 </div>
-                                <button
-                                    onClick={() => onSelect(video.id)}
-                                    className="text-[10px] font-black uppercase tracking-tighter text-brand-600 dark:text-brand-500 hover:scale-110 transition-transform"
+                                <span
+                                    className="text-[10px] font-black uppercase tracking-tighter text-brand-600 dark:text-brand-500 group-hover:scale-110 transition-transform"
                                 >
                                     Get Meta
-                                </button>
+                                </span>
                             </div>
                         </div>
-                    </div>
+                    </motion.div>
                 ))}
-            </div>
+            </motion.div>
         </div>
     );
 };

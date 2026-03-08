@@ -5,19 +5,69 @@ import { DownloadOptions } from './components/DownloadOptions';
 import { PlaylistView } from './components/PlaylistView';
 import { HistoryView } from './components/HistoryView';
 import { AboutView } from './components/AboutView';
-import { TrendingView } from './components/TrendingView';
-import { DiscoverView } from './components/DiscoverView';
 import { DonationModal } from './components/DonationModal';
 
 import { getContentMetadata } from './services/geminiService';
 import { ContentMetadata, AppState, DownloadOption, PlaylistItem, HistoryItem, LogEntry } from './types';
 import { startDownload, getLogs, getStatus } from './services/backendService';
-import { CloudDownload, Link, CheckCircle, ArrowRight, Terminal, Code2, Sparkles, Cpu, Info, History, Download, Flame, Coffee, Sun, Moon, Sunrise, Sunset, Users, Activity, BarChart3, Github } from 'lucide-react';
+import { CloudDownload, Link, CheckCircle, ArrowRight, Terminal, Code2, Sparkles, Cpu, Info, History, Download, Coffee, Sun, Moon, Sunrise, Sunset, Users, Activity, BarChart3, Github, MousePointer2, ChevronRight } from 'lucide-react';
+import { motion, AnimatePresence, useScroll, useTransform, useMotionTemplate, useMotionValue } from 'framer-motion';
+
+const pageVariants = {
+  initial: { opacity: 0 },
+  animate: { opacity: 1 },
+  exit: { opacity: 0 },
+};
+
+const transition = {
+  duration: 0.2
+};
 
 interface Stats {
   real_time: number;
   today: number;
   weekly: number;
+}
+
+// Simple Error Boundary
+interface ErrorBoundaryProps {
+  children: React.ReactNode;
+}
+
+interface ErrorBoundaryState {
+  hasError: boolean;
+  errorMessage: string;
+}
+
+class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  public state: ErrorBoundaryState = { hasError: false, errorMessage: '' };
+
+  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+    console.error('ErrorBoundary caught:', error);
+    return { hasError: true, errorMessage: error.message };
+  }
+
+  public render(): React.ReactNode {
+    if (this.state.hasError) {
+      return (
+        <div className="flex flex-col items-center justify-center py-20 px-6 text-center">
+          <div className="w-20 h-20 bg-red-500/10 rounded-full flex items-center justify-center mb-6">
+            <span className="text-red-500 font-bold text-2xl">!</span>
+          </div>
+          <h2 className="text-2xl font-black text-slate-900 dark:text-white mb-2">View Error</h2>
+          <p className="text-slate-500 dark:text-slate-400 mb-4 max-w-sm">{this.state.errorMessage || 'Something went wrong while rendering this view.'}</p>
+          <p className="text-slate-500 dark:text-slate-400 mb-8 max-w-sm">Your session is safe.</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="px-8 py-3 bg-brand-600 text-white font-bold rounded-2xl"
+          >
+            Reload App
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
 }
 
 export default function App() {
@@ -29,7 +79,7 @@ export default function App() {
   const [logs, setLogs] = React.useState<LogEntry[]>([]);
   const [errorMsg, setErrorMsg] = React.useState('');
 
-  const [activeTab, setActiveTab] = React.useState<'home' | 'history' | 'about' | 'trending' | 'discover'>('home');
+  const [activeTab, setActiveTab] = React.useState<'home' | 'history' | 'about'>('home');
   const [showDonation, setShowDonation] = React.useState(false);
   const [history, setHistory] = React.useState<HistoryItem[]>(() => {
     const saved = localStorage.getItem('clipix_history');
@@ -96,8 +146,8 @@ export default function App() {
       const data = await getContentMetadata(url);
       setMetadata(data);
       setAppState(AppState.READY);
-    } catch (err) {
-      setErrorMsg("Python backend unreachable. Could not resolve URL metadata.");
+    } catch (err: any) {
+      setErrorMsg(err.message || "Failed to resolve URL metadata.");
       setAppState(AppState.ERROR);
     }
   };
@@ -306,22 +356,47 @@ export default function App() {
     if (intervalRef.current) clearInterval(intervalRef.current);
   };
 
+  // Mouse tracking for magnetic shine effect on main input
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
+
+  const spotlightBackground = useMotionTemplate`
+    radial-gradient(
+      400px circle at ${mouseX}px ${mouseY}px,
+      rgba(230, 0, 0, 0.1),
+      transparent 80%
+    )
+  `;
+
+  const handleMouseMove = ({ currentTarget, clientX, clientY }: React.MouseEvent) => {
+    const { left, top } = currentTarget.getBoundingClientRect();
+    mouseX.set(clientX - left);
+    mouseY.set(clientY - top);
+  };
+
   return (
-    <div className="min-h-screen relative flex flex-col font-sans bg-white dark:bg-black transition-colors duration-300">
-      <div className="fixed inset-0 pointer-events-none -z-10 overflow-hidden">
-        <div className="absolute -top-[10%] left-[20%] w-[60vw] h-[60vw] bg-brand-500/5 dark:bg-brand-900/10 rounded-full blur-[120px] animate-float"></div>
-        <div className="absolute top-[60%] -right-[10%] w-[40vw] h-[40vw] bg-red-600/5 dark:bg-red-900/10 rounded-full blur-[100px] animate-float" style={{ animationDelay: '3s' }}></div>
+    <div className="min-h-screen relative flex flex-col font-sans bg-transparent transition-colors duration-300">
+      <div className="fixed inset-0 pointer-events-none -z-10 overflow-hidden mix-blend-screen dark:mix-blend-lighten">
+        <motion.div
+          animate={{ rotate: 360, scale: [1, 1.2, 1] }}
+          transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+          className="absolute -top-[10%] left-[20%] w-[60vw] h-[60vw] bg-brand-500/10 rounded-full blur-[120px]"
+        />
+        <motion.div
+          animate={{ rotate: -360, scale: [1, 1.5, 1] }}
+          transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
+          className="absolute top-[60%] -right-[10%] w-[40vw] h-[40vw] bg-rose-600/10 rounded-full blur-[100px]"
+        />
       </div>
 
       <header className="w-full p-4 md:p-6 flex justify-between items-center z-20 backdrop-blur-md sticky top-0 border-b border-slate-100 dark:border-slate-900/50">
         <div className="flex items-center gap-2 md:gap-3 cursor-pointer group" onClick={reset}>
           <div className="relative">
             <CloudDownload className="w-8 h-8 md:w-10 md:h-10 text-brand-600 dark:text-brand-500 fill-brand-100/20 group-hover:scale-110 transition-transform" />
-            <div className="absolute -bottom-1 -right-1 bg-black text-white text-[7px] md:text-[8px] font-bold px-1 py-0.5 rounded">PY</div>
           </div>
           <div>
             <div className="flex items-center gap-4">
-              <h1 className="text-2xl md:text-4xl font-black tracking-tighter text-slate-900 dark:text-white group-hover:text-brand-600 transition-colors">ClipixTub</h1>
+              <h1 className="text-2xl md:text-3xl font-black tracking-tighter text-slate-900 dark:text-white group-hover:text-brand-600 transition-colors">ClipixTub</h1>
               <div className="flex flex-col gap-1 border-l-2 border-slate-200 dark:border-slate-800 pl-4 py-1">
                 <span className="flex items-center gap-1.5 px-2 py-0.5 bg-green-500/10 text-green-600 dark:text-green-400 text-[10px] font-black uppercase tracking-widest rounded-full border border-green-500/20 w-fit">
                   <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span> Online
@@ -338,226 +413,292 @@ export default function App() {
         </div>
 
         <div className="flex items-center gap-2 md:gap-4">
-          <nav className="hidden lg:flex items-center gap-1 bg-slate-100/50 dark:bg-slate-900/50 backdrop-blur-xl p-1 rounded-2xl border border-slate-200/50 dark:border-slate-800/50">
-            <button onClick={() => setActiveTab('home')} className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all duration-300 ${activeTab === 'home' ? 'bg-white dark:bg-slate-800 text-brand-600 shadow-lg' : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'}`}>Downloader</button>
-            <button onClick={() => setActiveTab('trending')} className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all duration-300 ${activeTab === 'trending' ? 'bg-white dark:bg-slate-800 text-brand-600 shadow-lg flex items-center gap-1.5' : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 flex items-center gap-1.5'}`}>
-              <Flame className={`w-3.5 h-3.5 ${activeTab === 'trending' ? 'text-orange-500' : ''}`} /> Trending
-            </button>
-            <button onClick={() => setActiveTab('discover')} className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all duration-300 ${activeTab === 'discover' ? 'bg-white dark:bg-slate-800 text-brand-600 shadow-lg flex items-center gap-1.5' : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 flex items-center gap-1.5'}`}>
-              <Sparkles className={`w-3.5 h-3.5 ${activeTab === 'discover' ? 'text-brand-600' : ''}`} /> Discover
-            </button>
-            <button onClick={() => setActiveTab('history')} className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all duration-300 ${activeTab === 'history' ? 'bg-white dark:bg-slate-800 text-brand-600 shadow-lg' : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'}`}>History</button>
-            <button onClick={() => setActiveTab('about')} className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all duration-300 ${activeTab === 'about' ? 'bg-white dark:bg-slate-800 text-brand-600 shadow-lg' : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'}`}>About</button>
+          <nav className="hidden lg:flex items-center gap-1 bg-slate-100/50 dark:bg-slate-900/50 backdrop-blur-xl p-1 rounded-2xl border border-slate-200/50 dark:border-slate-800/50 relative">
+            {(['home', 'history', 'about'] as const).map((tab) => (
+              <button
+                key={tab}
+                type="button"
+                onClick={() => setActiveTab(tab)}
+                className={`relative px-5 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-[0.15em] transition-colors z-10 ${activeTab === tab
+                  ? 'text-brand-600 dark:text-white'
+                  : 'text-slate-500 hover:text-slate-900 dark:hover:text-slate-200'
+                  } flex items-center gap-2`}
+              >
+                {activeTab === tab && (
+                  <motion.div
+                    layoutId="activeTab"
+                    className="absolute inset-0 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200/50 dark:border-slate-700/50 -z-10"
+                    transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                  />
+                )}
+                {tab === 'home' ? 'Downloader' : tab}
+              </button>
+            ))}
           </nav>
           <div className="flex items-center gap-1.5 lg:hidden">
-            <button
-              onClick={() => setActiveTab('trending')}
-              className={`p-2.5 rounded-2xl transition-all duration-300 ${activeTab === 'trending' ? 'bg-brand-500 text-white shadow-lg' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'}`}
-              aria-label="Trending"
-            >
-              <Flame className="w-5 h-5" />
-            </button>
-            <button
-              onClick={() => setActiveTab('discover')}
-              className={`p-2.5 rounded-2xl transition-all duration-300 ${activeTab === 'discover' ? 'bg-brand-500 text-white shadow-lg' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'}`}
-              aria-label="Discover"
-            >
-              <Sparkles className="w-5 h-5" />
-            </button>
-            <button
-              onClick={() => setActiveTab('history')}
-              className={`p-2.5 rounded-2xl transition-all duration-300 ${activeTab === 'history' ? 'bg-brand-500 text-white shadow-lg' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'}`}
-              aria-label="History"
-            >
-              <History className="w-5 h-5" />
-            </button>
-            <button
-              onClick={() => setActiveTab('about')}
-              className={`p-2.5 rounded-2xl transition-all duration-300 ${activeTab === 'about' ? 'bg-brand-500 text-white shadow-lg' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'}`}
-              aria-label="About"
-            >
-              <Info className="w-5 h-5" />
-            </button>
+            {(['history', 'about'] as const).map((tab) => (
+              <motion.button
+                key={tab}
+                type="button"
+                whileTap={{ scale: 0.9 }}
+                onClick={() => setActiveTab(tab)}
+                className={`p-2.5 rounded-2xl transition-all duration-300 ${activeTab === tab
+                  ? 'bg-brand-500 text-white shadow-lg'
+                  : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
+                  }`}
+                aria-label={tab}
+              >
+                {tab === 'history' && <History className="w-5 h-5" />}
+                {tab === 'about' && <Info className="w-5 h-5" />}
+              </motion.button>
+            ))}
           </div>
           <div className="flex items-center gap-1 ml-2 border-l border-slate-200 dark:border-slate-800 pl-2">
-            <button
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
               onClick={() => setShowDonation(true)}
-              className="p-2.5 rounded-2xl text-slate-400 hover:text-red-500 hover:bg-red-500/10 transition-all group"
+              className="p-2.5 rounded-2xl text-slate-400 hover:text-red-500 hover:bg-red-500/10 transition-colors group relative"
               title="Donate to Support"
             >
               <div className="relative">
-                <Coffee className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                <Coffee className="w-5 h-5" />
                 <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full animate-ping"></span>
               </div>
-            </button>
+            </motion.button>
             <ThemeToggle />
           </div>
         </div>
       </header>
 
       <main className="flex-grow flex flex-col items-center justify-start pt-12 px-4 md:px-8 max-w-6xl mx-auto w-full z-10 pb-20">
-        {activeTab === 'about' && <AboutView onDonate={() => setShowDonation(true)} />}
-        {activeTab === 'history' && <HistoryView history={history} onClear={() => setHistory([])} />}
-        {activeTab === 'trending' && <TrendingView onSelect={(id) => {
-          const videoUrl = `https://www.youtube.com/watch?v=${id}`;
-          setUrl(videoUrl);
-          setActiveTab('home');
-          // Auto-load meta after switching
-          setTimeout(() => {
-            const fetchBtn = document.getElementById('fetch-metadata-btn');
-            if (fetchBtn) fetchBtn.click();
-          }, 100);
-        }} />}
-        {activeTab === 'discover' && <DiscoverView onSelect={(id) => {
-          const videoUrl = `https://www.youtube.com/watch?v=${id}`;
-          setUrl(videoUrl);
-          setActiveTab('home');
-          setTimeout(() => {
-            const fetchBtn = document.getElementById('fetch-metadata-btn');
-            if (fetchBtn) fetchBtn.click();
-          }, 100);
-        }} />}
-        {activeTab === 'home' && (
-          <>
-            <div className={`w-full max-w-4xl text-center transition-all duration-700 ${appState === AppState.IDLE ? 'scale-100 opacity-100 translate-y-0' : 'scale-95 opacity-0 -translate-y-10 hidden'}`}>
-              <div className="flex items-center justify-center gap-2 mb-4 animate-fade-in">
-                <span className="px-4 py-1 bg-brand-500/10 text-brand-600 dark:text-brand-500 text-[10px] font-black uppercase tracking-[0.3em] rounded-full border border-brand-500/20 shadow-sm">
-                  {greeting}
-                </span>
-              </div>
-              <h2 className="text-6xl md:text-8xl font-black text-slate-900 dark:text-white mb-6 tracking-tight leading-none">
-                Clipix<span className="brand-text-shimmer">Tub</span>
-              </h2>
-              <p className="text-xl md:text-2xl text-slate-500 dark:text-slate-400 mb-10 font-semibold max-w-3xl mx-auto leading-snug">
-                Download All types of Youtube content and convert to all formats with all qualities.
-              </p>
-              <div className="flex items-center justify-center gap-8 mb-12 flex-wrap">
-                <span className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-widest"><Terminal className="w-4 h-4 text-brand-500" /> Python Native</span>
-                <span className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-widest"><Sparkles className="w-4 h-4 text-brand-500" /> 4K Support</span>
-                <span className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-widest"><Cpu className="w-4 h-4 text-brand-500" /> FFmpeg Encoding</span>
-              </div>
-            </div>
+        <ErrorBoundary>
+          {activeTab === 'about' && <AboutView onDonate={() => setShowDonation(true)} />}
+          {activeTab === 'history' && <HistoryView history={history} onClear={() => setHistory([])} />}
+          {activeTab === 'home' && (
+            <div className="w-full flex flex-col items-center">
+              <motion.div layout className={`w-full max-w-4xl text-center transition-all duration-700 ${appState === AppState.IDLE ? 'scale-100 opacity-100 translate-y-0' : 'scale-95 opacity-0 -translate-y-10 hidden'}`}>
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.5 }}
+                  className="flex items-center justify-center gap-2 mb-4"
+                >
+                  <span className="px-4 py-1 bg-brand-500/10 text-brand-600 dark:text-brand-500 text-[10px] font-black uppercase tracking-[0.3em] rounded-full border border-brand-500/20 shadow-sm">
+                    {greeting}
+                  </span>
+                </motion.div>
+                <motion.h2
+                  initial={{ y: -20, opacity: 0, scale: 0.95 }}
+                  animate={{ y: 0, opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.8, type: "spring", bounce: 0.5 }}
+                  className="text-7xl md:text-[8rem] font-black text-slate-950 dark:text-white mb-6 tracking-tighter leading-[0.9]"
+                >
+                  Clipix<span className="brand-text-shimmer inline-block">Tub</span>
+                </motion.h2>
+                <motion.p
+                  initial={{ y: 20, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: 0.2, duration: 0.8 }}
+                  className="text-xl md:text-2xl text-slate-600 dark:text-slate-400 mb-12 font-medium max-w-3xl mx-auto leading-relaxed tracking-tight"
+                >
+                  Download all types of YouTube content and seamlessly convert to any format, in pure <strong className="text-slate-900 dark:text-white font-bold">4K fidelity</strong>.
+                </motion.p>
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.4, duration: 0.5 }}
+                  className="flex items-center justify-center gap-8 mb-12 flex-wrap"
+                >
+                  <span className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-widest"><Terminal className="w-4 h-4 text-brand-500" /> Python Native</span>
+                  <span className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-widest"><Sparkles className="w-4 h-4 text-brand-500" /> 4K Support</span>
+                  <span className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-widest"><Cpu className="w-4 h-4 text-brand-500" /> FFmpeg Encoding</span>
+                </motion.div>
+              </motion.div>
 
-            {(appState === AppState.IDLE || appState === AppState.ERROR) && (
-              <form onSubmit={handleAnalyze} className="w-full max-w-3xl relative group z-20">
-                <div className="absolute inset-y-0 left-0 pl-6 flex items-center"><Link className="h-6 w-6 text-slate-300 group-focus-within:text-brand-500 transition-colors" /></div>
-                <input
-                  type="text"
-                  placeholder="Paste YouTube Video, Short, or Playlist URL..."
-                  value={url}
-                  onChange={(e) => setUrl(e.target.value)}
-                  className="w-full pl-16 pr-36 py-6 bg-white dark:bg-slate-900 rounded-full border-2 border-slate-100 dark:border-slate-800 focus:border-brand-500 shadow-2xl shadow-brand-500/5 text-lg font-medium outline-none transition-all text-slate-900 dark:text-white font-mono"
-                />
-                <button type="submit" disabled={!url} className="absolute inset-y-2 right-2 px-8 rounded-full bg-brand-600 hover:bg-brand-700 text-white font-bold transition-all shadow-lg shadow-brand-500/20 flex items-center gap-2">
-                  <Download className="w-5 h-5" /> DOWNLOAD
+              {(appState === AppState.IDLE || appState === AppState.ERROR) && (
+                <motion.form
+                  layout
+                  initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  transition={{ delay: 0.3, type: "spring", stiffness: 200, damping: 20 }}
+                  onSubmit={handleAnalyze}
+                  onMouseMove={handleMouseMove}
+                  className="w-full max-w-3xl relative group z-20 mx-auto"
+                >
+                  <motion.div
+                    className="absolute inset-x-0 -top-px h-px bg-gradient-to-r from-transparent via-brand-500/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                  />
+                  <div className="absolute inset-y-0 left-0 pl-6 flex items-center z-10"><Link className="h-6 w-6 text-slate-400 group-focus-within:text-brand-500 transition-colors duration-300" /></div>
+                  <input
+                    type="text"
+                    placeholder="Paste YouTube Video, Short, or Playlist URL..."
+                    value={url}
+                    onChange={(e) => setUrl(e.target.value)}
+                    className="w-full pl-16 pr-44 py-7 bg-white/70 dark:bg-slate-900/70 backdrop-blur-2xl rounded-3xl border border-slate-200/50 dark:border-slate-800 focus:border-brand-500/50 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.2)] focus:shadow-[0_0_40px_rgba(230,0,0,0.15)] dark:focus:shadow-[0_0_40px_rgba(230,0,0,0.3)] text-lg font-medium outline-none transition-all duration-500 text-slate-900 dark:text-white font-sans relative z-0"
+                  />
+                  {/* Spotlight Hover Effect */}
+                  <motion.div
+                    className="pointer-events-none absolute -inset-px rounded-3xl opacity-0 transition-opacity duration-300 group-hover:opacity-100 z-10"
+                    style={{ background: spotlightBackground }}
+                  />
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.95 }}
+                    type="submit"
+                    disabled={!url}
+                    className="absolute inset-y-2.5 right-2.5 px-8 rounded-2xl bg-brand-600 hover:bg-brand-500 text-white font-bold transition-colors shadow-lg shadow-brand-500/20 flex items-center gap-2 z-20 hover:shadow-brand-500/40"
+                  >
+                    <Download className="w-5 h-5" /> <span>DOWNLOAD</span>
+                  </motion.button>
+                </motion.form>
+              )}
+
+              <motion.div
+                layout
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.6 }}
+                className="mt-8 flex items-center justify-center gap-6 opacity-80 hover:opacity-100 transition-opacity"
+              >
+                <button
+                  onClick={() => setShowDonation(true)}
+                  className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 hover:text-red-500 dark:hover:text-red-400 transition-colors"
+                >
+                  <Coffee className="w-3.5 h-3.5" />
+                  Support ClipixTub
                 </button>
-              </form>
-            )}
+                <div className="w-1 h-1 bg-slate-200 dark:bg-slate-800 rounded-full"></div>
+                <a
+                  href="https://github.com/YasserXD00/ClipixTub"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors"
+                >
+                  <Github className="w-3.5 h-3.5" />
+                  Source Code
+                </a>
+              </motion.div>
 
-            <div className="mt-8 flex items-center justify-center gap-6 animate-fade-in opacity-80 hover:opacity-100 transition-opacity">
-              <button
-                onClick={() => setShowDonation(true)}
-                className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 hover:text-red-500 dark:hover:text-red-400 transition-colors"
-              >
-                <Coffee className="w-3.5 h-3.5" />
-                Support ClipixTub
-              </button>
-              <div className="w-1 h-1 bg-slate-200 dark:bg-slate-800 rounded-full"></div>
-              <a
-                href="https://github.com/YasserXD00/ClipixTub"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors"
-              >
-                <Github className="w-3.5 h-3.5" />
-                Source Code
-              </a>
-            </div>
-
-            {appState === AppState.ANALYZING && (
-              <div className="flex flex-col items-center mt-20 animate-fade-in">
-                <div className="bg-slate-900 text-green-400 p-6 rounded-xl font-mono text-sm w-full max-w-md shadow-2xl border border-slate-800">
-                  <p className="animate-pulse">&gt; Initializing Python environment...</p>
-                  <p className="opacity-75">&gt; Loading extractors...</p>
-                  <p className="opacity-50">&gt; Connecting to youtube...</p>
-                </div>
-                <p className="mt-8 text-slate-900 dark:text-white font-bold animate-pulse text-lg">Resolving Metadata...</p>
-              </div>
-            )}
-
-            {(appState === AppState.READY || appState === AppState.DOWNLOADING || appState === AppState.COMPLETED) && metadata && (
-              <div className="w-full max-w-5xl mt-10 animate-fade-in pb-20">
-                <div className="flex justify-between items-center mb-8">
-                  <button onClick={reset} className="text-sm font-bold text-slate-400 hover:text-brand-500 flex items-center gap-2 transition-colors uppercase tracking-widest">
-                    <ArrowRight className="w-4 h-4 rotate-180" /> Change Content
-                  </button>
-                  <div className="flex items-center gap-1.5 text-xs font-bold px-3 py-1 bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400 rounded-full">
-                    <Terminal className="w-3.5 h-3.5" /> Python v3.11.4
+              {appState === AppState.ANALYZING && (
+                <motion.div
+                  layout
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  className="flex flex-col items-center mt-20"
+                >
+                  <div className="bg-slate-900 text-green-400 p-6 rounded-xl font-mono text-sm w-full max-w-md shadow-2xl border border-slate-800 relative overflow-hidden">
+                    <div className="absolute top-0 left-0 w-full h-1 bg-green-500 animate-pulse"></div>
+                    <p className="animate-pulse">&gt; Initializing Python environment...</p>
+                    <p className="opacity-75">&gt; Loading extractors...</p>
+                    <p className="opacity-50">&gt; Connecting to youtube...</p>
                   </div>
-                </div>
+                  <p className="mt-8 text-slate-900 dark:text-white font-bold animate-pulse text-lg">Resolving Metadata...</p>
+                </motion.div>
+              )}
 
-                <div className="grid grid-cols-1 gap-8">
-                  <VideoCard metadata={metadata} />
+              {(appState === AppState.READY || appState === AppState.DOWNLOADING || appState === AppState.COMPLETED) && metadata && (
+                <motion.div
+                  layout
+                  initial={{ opacity: 0, y: 50 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ type: "spring", bounce: 0.4 }}
+                  className="w-full max-w-5xl mt-10 pb-20"
+                >
+                  <div className="flex justify-start items-center mb-8">
+                    <motion.button
+                      whileHover={{ x: -5, color: '#ec4899' }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={reset}
+                      className="text-sm font-bold text-slate-400 flex items-center gap-2 transition-colors uppercase tracking-widest"
+                    >
+                      <ArrowRight className="w-4 h-4 rotate-180" /> Change Content
+                    </motion.button>
+                  </div>
 
-                  {(appState === AppState.READY || appState === AppState.DOWNLOADING || appState === AppState.COMPLETED) && metadata.type === 'video' && (
-                    <DownloadOptions
-                      metadata={metadata}
-                      onDownload={handleDownloadOption}
-                      appState={appState}
-                      activeDownloadId={activeDownloadId}
-                      downloadProgress={downloadProgress}
-                    />
-                  )}
+                  <div className="grid grid-cols-1 gap-8">
+                    <VideoCard metadata={metadata} />
 
-                  {appState === AppState.READY && (metadata.type === 'playlist' || metadata.type === 'channel') && (
-                    <PlaylistView
-                      metadata={metadata}
-                      onDownloadItem={(item) => simulateDownload(`${item.title}.mp4`, item.videoId, { title: item.title, type: 'video', format: 'mp4', thumbnailUrl: item.thumbnailUrl })}
-                      onDownloadAll={(items) => simulateDownload(`ClipixTub_Playlist_Batch.zip`, 'batch-download', { title: `Batch: ${metadata.title}`, type: 'playlist', format: 'zip', thumbnailUrl: metadata.thumbnailUrl })}
-                    />
-                  )}
+                    {(appState === AppState.READY || appState === AppState.DOWNLOADING || appState === AppState.COMPLETED) && metadata.type === 'video' && (
+                      <DownloadOptions
+                        metadata={metadata}
+                        onDownload={handleDownloadOption}
+                        appState={appState}
+                        activeDownloadId={activeDownloadId}
+                        downloadProgress={downloadProgress}
+                      />
+                    )}
 
-                  {(appState === AppState.DOWNLOADING || appState === AppState.COMPLETED) && (
-                    <div className="mt-8 bg-slate-950 rounded-3xl p-6 md:p-10 shadow-2xl border border-slate-800 text-left animate-slide-up relative overflow-hidden font-mono">
-                      {appState === AppState.DOWNLOADING ? (
-                        <>
-                          <div className="flex items-center justify-between mb-4 border-b border-slate-800 pb-2">
-                            <span className="text-slate-400 text-xs">root@clipixtub:~# python3 engine.py --url "{url.substring(0, 25)}..."</span>
-                            <span className="text-brand-500 font-bold">{Math.round(downloadProgress)}%</span>
+                    {appState === AppState.READY && (metadata.type === 'playlist' || metadata.type === 'channel') && (
+                      <PlaylistView
+                        metadata={metadata}
+                        onDownloadItem={(item) => simulateDownload(`${item.title}.mp4`, item.videoId, { title: item.title, type: 'video', format: 'mp4', thumbnailUrl: item.thumbnailUrl })}
+                        onDownloadAll={(items) => simulateDownload(`ClipixTub_Playlist_Batch.zip`, 'batch-download', { title: `Batch: ${metadata.title}`, type: 'playlist', format: 'zip', thumbnailUrl: metadata.thumbnailUrl })}
+                      />
+                    )}
+
+                    {(appState === AppState.DOWNLOADING || appState === AppState.COMPLETED) && (
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="mt-8 bg-slate-950 rounded-3xl p-6 md:p-10 shadow-2xl border border-slate-800 text-left relative overflow-hidden font-mono"
+                      >
+                        {appState === AppState.DOWNLOADING ? (
+                          <>
+                            <div className="flex items-center justify-between mb-4 border-b border-slate-800 pb-2">
+                              <span className="text-slate-400 text-xs">root@clipixtub:~# python3 engine.py --url "{url.substring(0, 25)}..."</span>
+                              <span className="text-brand-500 font-bold">{Math.round(downloadProgress)}%</span>
+                            </div>
+                            <div className="h-64 overflow-y-auto space-y-1 pr-2 scrollbar-hide text-sm">
+                              {logs.map((log, i) => (
+                                <div key={i} className={`flex gap-2 ${log.type === 'error' ? 'text-red-400' : log.type === 'warning' ? 'text-yellow-400' : log.type === 'success' ? 'text-green-400' : 'text-slate-300'}`}>
+                                  <span className="opacity-50 text-xs select-none">[{log.timestamp}]</span>
+                                  <span>{log.message}</span>
+                                </div>
+                              ))}
+                              <div ref={logsEndRef} />
+                            </div>
+                          </>
+                        ) : (
+                          <div className="py-8 text-center font-sans">
+                            <motion.div
+                              initial={{ scale: 0, rotate: -180 }}
+                              animate={{ scale: 1, rotate: 0 }}
+                              className="w-24 h-24 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-6"
+                            >
+                              <CheckCircle className="w-12 h-12 text-green-500" />
+                            </motion.div>
+                            <h3 className="text-3xl md:text-4xl font-black text-white mb-3 tracking-tight">Process Completed</h3>
+                            <p className="text-slate-400 mb-10 max-w-md mx-auto text-lg leading-relaxed">The Python script exited successfully. Your media file has been generated and downloaded.</p>
+                            <motion.button
+                              whileHover={{ scale: 1.02 }}
+                              whileTap={{ scale: 0.95 }}
+                              onClick={reset}
+                              className="px-10 py-4 bg-white text-slate-900 hover:bg-slate-100 font-black tracking-[0.1em] rounded-2xl shadow-xl transition-all flex items-center gap-3 mx-auto uppercase text-sm"
+                            >
+                              New Process <ChevronRight className="w-4 h-4" />
+                            </motion.button>
                           </div>
-                          <div className="h-64 overflow-y-auto space-y-1 pr-2 scrollbar-hide text-sm">
-                            {logs.map((log, i) => (
-                              <div key={i} className={`flex gap-2 ${log.type === 'error' ? 'text-red-400' : log.type === 'warning' ? 'text-yellow-400' : log.type === 'success' ? 'text-green-400' : 'text-slate-300'}`}>
-                                <span className="opacity-50 text-xs select-none">[{log.timestamp}]</span>
-                                <span>{log.message}</span>
-                              </div>
-                            ))}
-                            <div ref={logsEndRef} />
-                          </div>
-                        </>
-                      ) : (
-                        <div className="py-8 text-center font-sans">
-                          <div className="w-24 h-24 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
-                            <CheckCircle className="w-12 h-12 text-green-500" />
-                          </div>
-                          <h3 className="text-3xl font-black text-white mb-2">Process Completed</h3>
-                          <p className="text-slate-400 mb-8 max-w-md mx-auto">The Python script exited successfully. Media file generated.</p>
-                          <button onClick={reset} className="px-12 py-4 bg-brand-600 hover:bg-brand-700 text-white font-bold rounded-xl shadow-xl transition-all hover:scale-105">New Process</button>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
+                        )}
+                      </motion.div>
+                    )}
+                  </div>
+                </motion.div>
+              )}
 
-            {appState === AppState.ERROR && (
-              <div className="mt-8 p-6 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-3xl border border-red-100 dark:border-red-900/30 max-w-3xl w-full text-center font-bold">
-                {errorMsg}
-              </div>
-            )}
-          </>
-        )}
+              {appState === AppState.ERROR && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mt-8 p-6 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-3xl border border-red-100 dark:border-red-900/30 max-w-3xl w-full text-center font-bold"
+                >
+                  {errorMsg}
+                </motion.div>
+              )}
+            </div>
+          )}
+        </ErrorBoundary>
       </main>
 
       <footer className="w-full py-8 text-center text-slate-400 text-xs font-bold uppercase tracking-widest border-t border-slate-100 dark:border-slate-900/50">

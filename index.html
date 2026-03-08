@@ -20,7 +20,7 @@
               400: '#f56565', 500: '#E60000', 600: '#c53030', 700: '#9b2c2c',
               800: '#822727', 900: '#742a2a',
             },
-            slate: { 950: '#000000', 900: '#121212', 800: '#1e1e1e' }
+            slate: { 950: '#09090b', 900: '#121212', 800: '#18181b' }
           },
           animation: {
             'fade-in': 'fadeIn 0.5s ease-out forwards',
@@ -39,10 +39,14 @@
               '100%': { backgroundPosition: '200% 0' }
             },
             particle: {
-              '0%': { transform: 'translateY(0) translateX(0) rotate(0deg)', opacity: 0 },
-              '10%': { opacity: 0.2 },
-              '90%': { opacity: 0.2 },
-              '100%': { transform: 'translateY(-100vh) translateX(50px) rotate(360deg)', opacity: 0 }
+              '0%': { transform: 'translateY(0) translateX(0) scale(1)', opacity: 0 },
+              '10%': { opacity: 0.3 },
+              '90%': { opacity: 0.3 },
+              '100%': { transform: 'translateY(-100vh) translateX(100px) scale(0)', opacity: 0 }
+            },
+            gradientBg: {
+              '0%, 100%': { backgroundPosition: '0% 50%' },
+              '50%': { backgroundPosition: '100% 50%' },
             }
           }
         },
@@ -85,23 +89,36 @@
     }
 
     .glass-card {
-      background: rgba(255, 255, 255, 0.7);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      border: 1px solid rgba(255, 255, 255, 0.3);
+      background: rgba(255, 255, 255, 0.6);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
     }
 
     .dark .glass-card {
-      background: rgba(18, 18, 18, 0.7);
-      border: 1px solid rgba(255, 255, 255, 0.05);
+      background: rgba(18, 18, 18, 0.65);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+    }
+
+    .gradient-bg {
+      background: linear-gradient(-45deg, #ffffff, #f8fafc, #fee2e2, #ffffff);
+      background-size: 400% 400%;
+      animation: gradientBg 15s ease infinite;
+      position: fixed;
+      inset: 0;
+      z-index: -2;
+    }
+
+    .dark .gradient-bg {
+      background: linear-gradient(-45deg, #09090b, #18181b, #2a0815, #09090b);
+      background-size: 400% 400%;
     }
 
     .particles {
       position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
+      inset: 0;
       pointer-events: none;
       z-index: -1;
       overflow: hidden;
@@ -136,20 +153,23 @@
   class="bg-white text-black dark:bg-slate-950 dark:text-white antialiased overflow-x-hidden selection:bg-brand-500 selection:text-white">
   <div id="root"></div>
 
+  <div class="gradient-bg"></div>
   <div class="particles" id="particles-container"></div>
 
   <script>
     const container = document.getElementById('particles-container');
-    const count = 20;
+    const count = 30; // Increased particle count
     for (let i = 0; i < count; i++) {
       const p = document.createElement('div');
       p.className = 'particle';
-      const size = Math.random() * 20 + 10 + 'px';
+      const size = Math.random() * 15 + 5 + 'px'; // Varied sizes
       p.style.width = size;
       p.style.height = size;
       p.style.left = Math.random() * 100 + 'vw';
-      p.style.animationDelay = Math.random() * 15 + 's';
-      p.style.animationDuration = Math.random() * 10 + 10 + 's';
+      p.style.animationDelay = Math.random() * 20 + 's';
+      p.style.animationDuration = Math.random() * 15 + 15 + 's'; // Slower rise
+      // Add slight glowing effect to particles
+      p.style.boxShadow = '0 0 10px rgba(230, 0, 0, 0.2)';
       container.appendChild(p);
     }
   </script>

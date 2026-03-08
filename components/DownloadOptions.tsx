@@ -1,6 +1,22 @@
 import * as React from 'react';
 import { DownloadOption, ContentMetadata, AppState } from '../types';
 import { Download, FileVideo, Music, Code, Loader2, VolumeX, Volume2 } from 'lucide-react';
+import { motion } from 'framer-motion';
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1
+    }
+  }
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20, scale: 0.95 },
+  show: { opacity: 1, y: 0, scale: 1, transition: { type: "spring", stiffness: 300, damping: 24 } }
+};
 
 interface DownloadOptionsProps {
   metadata: ContentMetadata;
@@ -18,7 +34,7 @@ const getVideoOptions = (availableQualities?: string[]): DownloadOption[] => {
     '480p': { label: 'MP4 Video (480p)', size: '45 MB' },
     '360p': { label: 'MP4 Video (360p)', size: '25 MB' },
   };
-  
+
   return qualities.map(q => ({
     id: `mp4-${q}`,
     label: qualityMap[q]?.label || `MP4 Video (${q})`,
@@ -38,7 +54,7 @@ const getVideoMutedOptions = (availableQualities?: string[]): DownloadOption[] =
     '480p': { size: '30 MB' },
     '360p': { size: '15 MB' },
   };
-  
+
   return qualities.map(q => ({
     id: `mp4-${q}-mute`,
     label: `MP4 (${q} Muted)`,
@@ -55,52 +71,53 @@ const audioOnly: DownloadOption[] = [
   { id: 'mp3-128', label: 'MP3 (128kbps)', subLabel: 'Standard Quality', size: '4.8 MB', type: 'audio', format: 'mp3' },
 ];
 
-export const DownloadOptions: React.FC<DownloadOptionsProps> = ({ 
-  metadata, 
-  onDownload, 
-  appState, 
-  activeDownloadId, 
-  downloadProgress 
+export const DownloadOptions: React.FC<DownloadOptionsProps> = ({
+  metadata,
+  onDownload,
+  appState,
+  activeDownloadId,
+  downloadProgress
 }) => {
   const isDownloading = appState === AppState.DOWNLOADING;
 
   const renderOption = (option: DownloadOption) => {
     const isActive = activeDownloadId === option.id && isDownloading;
     const isMuted = option.id.includes('mute');
-    
+
     return (
-      <button
+      <motion.button
+        variants={itemVariants}
+        whileHover={{ scale: 1.03 }}
+        whileTap={{ scale: 0.97 }}
         key={option.id}
         onClick={() => !isDownloading && onDownload(option)}
         disabled={isDownloading && !isActive}
-        className={`group relative flex flex-col p-5 bg-white dark:bg-slate-900 rounded-2xl border transition-all duration-300 text-left overflow-hidden ${
-          isActive 
-            ? 'border-brand-500 ring-2 ring-brand-500/20 shadow-lg scale-[1.02]' 
-            : isDownloading 
-              ? 'opacity-40 cursor-not-allowed border-slate-200 dark:border-slate-800' 
-              : 'border-slate-200 dark:border-slate-800 hover:border-brand-500/50 hover:shadow-xl hover:shadow-brand-500/5 hover:-translate-y-1'
-        }`}
+        className={`group relative flex flex-col p-5 bg-white/50 dark:bg-slate-900/50 backdrop-blur-md rounded-2xl border transition-all duration-300 text-left overflow-hidden ${isActive
+          ? 'border-brand-500 ring-4 ring-brand-500/20 shadow-lg scale-[1.02]'
+          : isDownloading
+            ? 'opacity-40 cursor-not-allowed border-slate-200/50 dark:border-slate-800/50'
+            : 'border-slate-200/50 dark:border-slate-800/50 hover:border-brand-500/50 hover:shadow-xl hover:shadow-brand-500/5'
+          }`}
       >
         {/* Progress Bar Background for active item */}
         {isActive && (
-          <div 
-            className="absolute bottom-0 left-0 h-1.5 bg-brand-500 transition-all duration-300 ease-out z-0" 
+          <div
+            className="absolute bottom-0 left-0 h-1.5 bg-brand-500 transition-all duration-300 ease-out z-0"
             style={{ width: `${downloadProgress}%` }}
           />
         )}
 
         <div className="flex items-center justify-between w-full relative z-10">
           <div className="flex items-center gap-4">
-            <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-500 ${
-              isActive 
-                ? 'bg-brand-500 text-white animate-pulse' 
-                : 'bg-slate-50 dark:bg-slate-800 text-brand-500 group-hover:bg-brand-500 group-hover:text-white group-hover:rotate-12'
-            }`}>
+            <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-500 ${isActive
+              ? 'bg-brand-500 text-white animate-pulse'
+              : 'bg-slate-50 dark:bg-slate-800 text-brand-500 group-hover:bg-brand-500 group-hover:text-white group-hover:rotate-12'
+              }`}>
               {isActive ? (
                 <Loader2 className="w-6 h-6 animate-spin" />
               ) : (
                 isMuted ? <VolumeX className="w-6 h-6" /> :
-                option.type === 'video' ? <FileVideo className="w-6 h-6" /> : <Music className="w-6 h-6" />
+                  option.type === 'video' ? <FileVideo className="w-6 h-6" /> : <Music className="w-6 h-6" />
               )}
             </div>
             <div>
@@ -117,11 +134,11 @@ export const DownloadOptions: React.FC<DownloadOptionsProps> = ({
           </div>
           {!isActive && <Download className="w-5 h-5 text-slate-300 group-hover:text-brand-500 group-hover:scale-110 transition-all" />}
         </div>
-        
+
         {!isDownloading && (
           <div className="absolute top-0 right-0 w-16 h-16 -mr-8 -mt-8 bg-brand-500/5 rounded-full group-hover:scale-150 transition-transform duration-700"></div>
         )}
-      </button>
+      </motion.button>
     );
   };
 
@@ -135,9 +152,14 @@ export const DownloadOptions: React.FC<DownloadOptionsProps> = ({
           <Volume2 className="w-5 h-5 text-brand-500" />
           Video + Audio
         </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <motion.div
+          variants={containerVariants}
+          initial="hidden"
+          animate="show"
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
+        >
           {videoOptions.map(renderOption)}
-        </div>
+        </motion.div>
       </section>
 
       {mutedOptions.length > 0 && (
@@ -146,9 +168,14 @@ export const DownloadOptions: React.FC<DownloadOptionsProps> = ({
             <VolumeX className="w-5 h-5 text-brand-500" />
             Muted / Video Only
           </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <motion.div
+            variants={containerVariants}
+            initial="hidden"
+            animate="show"
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
+          >
             {mutedOptions.map(renderOption)}
-          </div>
+          </motion.div>
         </section>
       )}
 
@@ -157,18 +184,16 @@ export const DownloadOptions: React.FC<DownloadOptionsProps> = ({
           <Music className="w-5 h-5 text-brand-500" />
           High Fidelity Audio
         </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <motion.div
+          variants={containerVariants}
+          initial="hidden"
+          animate="show"
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
+        >
           {audioOnly.map(renderOption)}
-        </div>
+        </motion.div>
       </section>
 
-      <div className="flex flex-col items-center justify-center gap-2 pt-8 opacity-40">
-        <div className="flex items-center gap-2">
-          <Code className="w-4 h-4" />
-          <span className="text-[10px] font-bold uppercase tracking-[0.2em]">Python Engine v3.11 Active</span>
-        </div>
-        <div className="text-[9px] font-medium italic">Advanced adaptive stream merging enabled</div>
-      </div>
     </div>
   );
 };

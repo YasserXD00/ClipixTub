@@ -1,5 +1,6 @@
 import * as React from 'react';
-import { Terminal, Cpu, Sparkles, Github, BookOpen, Layers, ShieldCheck, Zap, Code, ChevronRight, Copy, Check, Coffee } from 'lucide-react';
+import { Terminal, Cpu, Sparkles, Github, BookOpen, Layers, ShieldCheck, Zap, Code, ChevronRight, Copy, Check, Coffee, Heart, Globe, Box } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 interface AboutViewProps {
   onDonate?: () => void;
@@ -44,149 +45,174 @@ if __name__ == "__main__":
     setTimeout(() => setCopied(false), 2000);
   };
 
-  return (
-    <div className="w-full max-w-4xl mx-auto mt-8 animate-fade-in pb-20 space-y-16">
-      {/* Hero Section */}
-      <section className="text-center space-y-6">
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-brand-50 dark:bg-brand-900/20 text-brand-600 dark:text-brand-400 text-xs font-bold uppercase tracking-widest border border-brand-100 dark:border-brand-900/30">
-          <Zap className="w-3.5 h-3.5 fill-current" /> Next-Gen Media Engine
-        </div>
-        <h2 className="text-4xl md:text-5xl font-black text-slate-900 dark:text-white tracking-tight">
-          Clipix<span className="text-brand-600">Tub</span> Media Engine
-        </h2>
-        <p className="text-xl text-slate-500 dark:text-slate-400 max-w-2xl mx-auto leading-relaxed">
-          The world's first browser-based downloader powered by a virtualized Python environment and native FFmpeg transcoding.
-        </p>
-      </section>
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.15
+      }
+    }
+  };
 
-      {/* Python Script Section */}
-      <section className="space-y-8">
-        <div className="flex items-center justify-between">
-          <div className="space-y-1">
-            <h3 className="text-2xl font-black text-slate-900 dark:text-white flex items-center gap-2">
-              <Code className="w-6 h-6 text-brand-500" />
-              Native Python Implementation
+  const itemVariants = {
+    hidden: { opacity: 0, y: 30 },
+    show: {
+      opacity: 1,
+      y: 0,
+      transition: { type: "spring", stiffness: 100, damping: 20 }
+    }
+  };
+
+  return (
+    <motion.div
+      variants={containerVariants}
+      initial="hidden"
+      animate="show"
+      className="w-full max-w-5xl mx-auto mt-8 pb-32 space-y-24"
+    >
+      {/* Hero Section */}
+      <motion.section variants={itemVariants} className="text-center space-y-8">
+        <div className="inline-flex items-center gap-2 px-6 py-2 rounded-full bg-brand-500/10 text-brand-600 dark:text-brand-400 text-[10px] font-black uppercase tracking-[0.4em] border border-brand-500/20">
+          <Sparkles className="w-3.5 h-3.5" /> Core Architecture
+        </div>
+        <h2 className="text-6xl md:text-8xl font-black text-slate-950 dark:text-white tracking-tighter leading-none">
+          Next-Gen <br /><span className="text-brand-600 brand-text-shimmer">Extraction</span>
+        </h2>
+        <p className="text-xl md:text-2xl text-slate-500 dark:text-slate-400 max-w-3xl mx-auto leading-relaxed tracking-tight font-medium">
+          ClipixTub is a sophisticated media distribution engine leveraging virtualized <strong className="text-slate-900 dark:text-white">Python 3.11</strong> environments and hardware-accelerated <strong className="text-slate-900 dark:text-white">FFmpeg</strong> transcoding.
+        </p>
+      </motion.section>
+
+      {/* Code Innovation Section */}
+      <motion.section variants={itemVariants} className="space-y-10">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+          <div className="space-y-3">
+            <h3 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-3">
+              <Terminal className="w-8 h-8 text-brand-500" />
+              Open Logic
             </h3>
-            <p className="text-slate-500 dark:text-slate-400 text-sm">Use our core logic directly in your terminal with pytube.</p>
+            <p className="text-slate-500 dark:text-slate-400 font-medium text-lg">Our core downloader logic, available for the community.</p>
           </div>
           <button
             onClick={copyToClipboard}
-            className="flex items-center gap-2 px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-lg text-xs font-bold transition-all"
+            className="flex items-center gap-3 px-8 py-4 bg-slate-950 text-white rounded-2xl font-black text-[10px] tracking-widest uppercase hover:bg-slate-800 transition-all shadow-xl shadow-slate-950/20 active:scale-95"
           >
-            {copied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
-            {copied ? 'Copied!' : 'Copy Code'}
+            {copied ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4" />}
+            {copied ? 'Copied to Clipboard' : 'Copy Python Source'}
           </button>
         </div>
 
         <div className="relative group">
-          <div className="absolute -inset-1 bg-gradient-to-r from-brand-500 to-orange-500 rounded-2xl blur opacity-10 group-hover:opacity-20 transition duration-1000 group-hover:duration-200"></div>
-          <div className="relative bg-slate-900 rounded-xl overflow-hidden border border-slate-800 shadow-2xl">
-            <div className="flex items-center justify-between px-4 py-2 bg-slate-800/50 border-b border-slate-700/50">
-              <div className="flex gap-1.5">
-                <div className="w-3 h-3 rounded-full bg-red-500/20 border border-red-500/50"></div>
-                <div className="w-3 h-3 rounded-full bg-yellow-500/20 border border-yellow-500/50"></div>
-                <div className="w-3 h-3 rounded-full bg-green-500/20 border border-green-500/50"></div>
+          <div className="absolute -inset-2 bg-gradient-to-r from-brand-500 to-rose-500 rounded-[2.5rem] blur-2xl opacity-10 group-hover:opacity-20 transition duration-1000"></div>
+          <div className="relative bg-[#09090b] rounded-[2rem] overflow-hidden border border-white/5 shadow-2xl">
+            <div className="flex items-center justify-between px-6 py-4 bg-white/5 border-b border-white/5">
+              <div className="flex gap-2">
+                <div className="w-3 h-3 rounded-full bg-rose-500/30"></div>
+                <div className="w-3 h-3 rounded-full bg-amber-500/30"></div>
+                <div className="w-3 h-3 rounded-full bg-emerald-500/30"></div>
               </div>
-              <span className="text-[10px] font-mono text-slate-500 font-bold uppercase">clipix_downloader.py</span>
+              <span className="text-[10px] font-black text-slate-500 tracking-[0.2em] uppercase">media_engine_v2.py</span>
             </div>
-            <pre className="p-6 overflow-x-auto text-sm font-mono text-slate-300 leading-relaxed scrollbar-hide">
-              <code>{pythonCode}</code>
-            </pre>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="p-4 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-200 dark:border-slate-800 flex items-start gap-3">
-            <ChevronRight className="w-5 h-5 text-brand-500 shrink-0 mt-0.5" />
-            <div>
-              <p className="text-sm font-bold text-slate-900 dark:text-slate-200">Requirements</p>
-              <p className="text-xs text-slate-500 font-mono">pip install pytube</p>
-            </div>
-          </div>
-          <div className="p-4 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-200 dark:border-slate-800 flex items-start gap-3">
-            <ChevronRight className="w-5 h-5 text-brand-500 shrink-0 mt-0.5" />
-            <div>
-              <p className="text-sm font-bold text-slate-900 dark:text-slate-200">Features</p>
-              <p className="text-xs text-slate-500">Real-time progress callbacks, automatic folder management, and dynamic stream resolution selection.</p>
+            <div className="p-8 overflow-x-auto">
+              <code className="text-sm font-mono text-slate-300 leading-relaxed whitespace-pre font-medium block">
+                {pythonCode}
+              </code>
             </div>
           </div>
         </div>
-      </section>
+      </motion.section>
 
-      {/* Feature Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+      {/* Capabilities Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {[
-          { icon: <Terminal className="w-6 h-6" />, title: 'Python Native', desc: 'Runs an emulated Python 3.11 environment for precise content extraction and metadata resolution.' },
-          { icon: <Cpu className="w-6 h-6" />, title: 'FFmpeg Core', desc: 'Hardware-accelerated transcoding ensures the highest possible fidelity for audio and video streams.' },
-          { icon: <Sparkles className="w-6 h-6" />, title: '4K Ultra HD', desc: 'Support for adaptive bitrate streaming allows you to download content in full 2160p resolution.' },
-          { icon: <ShieldCheck className="w-6 h-6" />, title: 'Privacy First', desc: 'All processing logs are handled in-memory. No user data is ever stored on the cloud extraction layers.' },
-          { icon: <Layers className="w-6 h-6" />, title: 'Batch Engine', desc: 'Download entire playlists or channel catalogs with a single click using our multi-threaded process.' },
-          { icon: <Zap className="w-6 h-6" />, title: 'Zero Buffer', desc: 'Pre-fetching streams directly from Google Video manifests for instant download initialization.' },
+          { icon: <Cpu className="w-6 h-6" />, title: 'FFmpeg Core', desc: 'Enterprise-grade transcoding with adaptive stream merging for zero-loss fidelity.' },
+          { icon: <Globe className="w-6 h-6" />, title: 'Global CDN', desc: 'Direct manifest pre-fetching ensures instant initialization and maximum bandwidth.' },
+          { icon: <ShieldCheck className="w-6 h-6" />, title: 'Secure Tunnels', desc: 'All extraction processes run in ephemeral sandboxed environments for total privacy.' },
         ].map((feat, idx) => (
-          <div key={idx} className="bg-white dark:bg-slate-900 p-8 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-xl transition-all hover:-translate-y-1 group">
-            <div className="w-12 h-12 bg-slate-50 dark:bg-slate-800 text-brand-500 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-brand-500 group-hover:text-white transition-colors duration-500">
+          <motion.div
+            key={idx}
+            variants={itemVariants}
+            whileHover={{ y: -5 }}
+            className="glass-card p-10 rounded-[2.5rem] border border-slate-200/50 dark:border-slate-800 transition-all"
+          >
+            <div className="w-14 h-14 bg-brand-500/10 text-brand-500 rounded-2xl flex items-center justify-center mb-8">
               {feat.icon}
             </div>
-            <h4 className="text-lg font-bold text-slate-900 dark:text-white mb-3 tracking-tight">{feat.title}</h4>
-            <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">{feat.desc}</p>
-          </div>
+            <h4 className="text-xl font-black text-slate-900 dark:text-white mb-4 tracking-tight">{feat.title}</h4>
+            <p className="text-slate-500 dark:text-slate-400 leading-relaxed font-medium">{feat.desc}</p>
+          </motion.div>
         ))}
       </div>
 
-      {/* Links / Documentation */}
-      <section className="bg-slate-900 dark:bg-slate-900/50 rounded-3xl p-10 text-white flex flex-col md:flex-row items-center justify-between gap-8 border border-white/5 shadow-2xl relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-brand-500/10 rounded-full blur-[80px] -mr-32 -mt-32"></div>
-        <div className="space-y-4 relative z-10 text-center md:text-left">
-          <h3 className="text-2xl font-black">Open Source & Community</h3>
-          <p className="text-slate-400 max-w-md">
-            Interested in the technical implementation? Our engine is open for inspection and contribution.
+      {/* GitHub & Community */}
+      <motion.section
+        variants={itemVariants}
+        className="glass-card bg-slate-950 rounded-[3rem] p-12 md:p-20 text-white flex flex-col md:flex-row items-center justify-between gap-12 border border-white/5 relative overflow-hidden"
+      >
+        <div className="absolute top-0 right-0 w-[40rem] h-[40rem] bg-brand-600/10 rounded-full blur-[120px] -mr-[20rem] -mt-[20rem]"></div>
+        <div className="space-y-6 relative z-10 text-center md:text-left">
+          <div className="flex items-center justify-center md:justify-start gap-4 mb-2">
+            <Github className="w-10 h-10" />
+            <div className="h-10 w-px bg-white/20"></div>
+            <h3 className="text-4xl font-black tracking-tighter">Open Source</h3>
+          </div>
+          <p className="text-slate-400 text-lg max-w-md font-medium leading-relaxed">
+            ClipixTub is fully transparent. Explore the architecture, contribute to the engine, or deploy your own node.
           </p>
+          <div className="flex flex-wrap items-center justify-center md:justify-start gap-3">
+            <a href="https://github.com/YasserXD00/ClipixTub" target="_blank" rel="noopener noreferrer" className="px-8 py-4 bg-white text-slate-950 rounded-2xl font-black text-[10px] tracking-[0.2em] uppercase hover:bg-slate-200 transition-all">
+              Access Repository
+            </a>
+            <a href="https://discord.gg/d6SsCCkAqe" target="_blank" rel="noopener noreferrer" className="px-8 py-4 bg-white/10 hover:bg-white/20 text-white rounded-2xl font-black text-[10px] tracking-[0.2em] uppercase transition-all backdrop-blur-xl">
+              Join Discord
+            </a>
+          </div>
         </div>
-        <div className="flex flex-col sm:flex-row gap-4 relative z-10 w-full md:w-auto">
-          <a href="https://github.com/YasserXD00/ClipixTub" target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2 px-8 py-4 bg-white text-black rounded-xl font-bold hover:bg-slate-100 transition-all shadow-xl">
-            <Github className="w-5 h-5" /> GitHub Repository
-          </a>
-          <a href="https://discord.gg/d6SsCCkAqe" target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2 px-8 py-4 bg-[#5865F2] text-white rounded-xl font-bold hover:bg-[#4752C4] transition-all border border-white/10 shadow-xl">
-            <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z" /></svg> Join our Discord
-          </a>
 
+        <div className="relative shrink-0 hidden lg:block">
+          <div className="w-80 h-80 bg-gradient-to-br from-brand-500 to-rose-600 rounded-[3rem] flex items-center justify-center shadow-2xl relative z-10">
+            <Box className="w-32 h-32 text-white/90" />
+          </div>
+          <div className="absolute -inset-4 bg-brand-500/20 rounded-[4rem] blur-2xl -z-10"></div>
         </div>
-      </section>
+      </motion.section>
 
       {/* Support Section */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-brand-600 to-indigo-700 rounded-[2.5rem] p-12 text-white shadow-2xl">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full blur-[100px] -mr-48 -mt-48"></div>
-        <div className="absolute bottom-0 left-0 w-64 h-64 bg-black/20 rounded-full blur-[80px] -ml-32 -mb-32"></div>
-
-        <div className="relative z-10 flex flex-col md:flex-row items-center gap-12">
-          <div className="shrink-0 w-24 h-24 bg-white/20 backdrop-blur-xl rounded-3xl flex items-center justify-center border border-white/30 rotate-3">
-            <Coffee className="w-12 h-12 text-white" />
+      <motion.section
+        variants={itemVariants}
+        className="relative group cursor-pointer"
+        onClick={onDonate}
+      >
+        <div className="absolute -inset-2 bg-gradient-to-r from-orange-500 via-brand-500 to-rose-500 rounded-[4rem] blur-2xl opacity-20 group-hover:opacity-40 transition-opacity duration-1000"></div>
+        <div className="relative glass-card bg-white/80 dark:bg-slate-900/80 p-12 md:p-16 rounded-[3.5rem] border border-slate-200/50 dark:border-slate-800 flex flex-col md:flex-row items-center gap-12 text-center md:text-left">
+          <div className="shrink-0 w-24 h-24 bg-brand-500/10 rounded-3xl flex items-center justify-center border border-brand-500/20">
+            <Coffee className="w-12 h-12 text-brand-500" />
           </div>
-          <div className="flex-1 text-center md:text-left space-y-4">
-            <h3 className="text-3xl font-black tracking-tight">Support the Project</h3>
-            <p className="text-brand-100 font-medium text-lg leading-relaxed">
-              ClipixTub is a labor of love. Your donations help us keep the servers running and the extraction engine optimized. Every coffee counts!
+          <div className="flex-1 space-y-4">
+            <h3 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">Fuel the Innovation</h3>
+            <p className="text-slate-500 dark:text-slate-400 text-lg font-medium leading-relaxed">
+              ClipixTub is maintained by a small team of independent developers. Your support keeps our high-fidelity extraction nodes online.
             </p>
           </div>
-          <button
-            onClick={onDonate}
-            className="shrink-0 px-8 py-5 bg-white text-brand-600 rounded-2xl font-black text-lg hover:scale-110 active:scale-95 transition-all shadow-2xl flex items-center gap-3 group border border-white/20"
-          >
-            Buy me a coffee
-            <ChevronRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
+          <button className="px-10 py-5 bg-brand-600 hover:bg-brand-500 text-white rounded-[2rem] font-black text-xs tracking-[0.2em] uppercase transition-all shadow-xl shadow-brand-600/20 active:scale-95 flex items-center gap-4">
+            Support Now <ChevronRight className="w-5 h-5" />
           </button>
         </div>
-      </section>
+      </motion.section>
 
-      {/* Technical Footnote */}
-      <div className="text-center space-y-4 opacity-50 pt-10 border-t border-slate-100 dark:border-slate-800">
-        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">ClipixTub Media Distribution Stack v2.5.0-BETA</p>
-        <div className="flex justify-center gap-6">
-          <span className="text-xs font-bold text-slate-400">Node.js LTS</span>
-          <span className="text-xs font-bold text-slate-400">Python 3.11</span>
-          <span className="text-xs font-bold text-slate-400">FFmpeg 4.4</span>
+      {/* Footnote */}
+      <motion.div variants={itemVariants} className="text-center space-y-4 pt-10 border-t border-slate-100 dark:border-slate-800 w-full">
+        <div className="flex items-center justify-center gap-2 mb-2">
+          <Heart className="w-3 h-3 text-red-500 fill-current" />
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Handcrafted for the Web</p>
         </div>
-      </div>
-    </div>
+        <div className="flex justify-center gap-8 text-[10px] font-bold text-slate-400 uppercase tracking-widest opacity-60">
+          <span>Engine v2.5.0-BETA</span>
+          <span>Node.js v18</span>
+          <span>Python 3.11</span>
+        </div>
+      </motion.div>
+    </motion.div>
   );
 };
