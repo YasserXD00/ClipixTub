@@ -18,9 +18,14 @@ import sys
 
 
 def main():
-    backend_dir = os.path.dirname(os.path.abspath(__file__))
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    backend_dir = os.path.join(base_dir, "backend")
     # Ensure we're running from the backend directory so server:app and config file resolve
-    os.chdir(backend_dir)
+    if os.path.exists(backend_dir):
+        os.chdir(backend_dir)
+    else:
+        # Fallback if already in backend
+        backend_dir = base_dir
 
     port = os.environ.get("PORT", "8000")
     
