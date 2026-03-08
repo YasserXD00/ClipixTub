@@ -22,6 +22,13 @@ def main():
     # Ensure we're running from the backend directory so server:app and config file resolve
     os.chdir(backend_dir)
 
+    port = os.environ.get("PORT", "8000")
+    
+    # Check if backend_dir has a gunicorn_conf.py, otherwise fallback
+    conf_path = "gunicorn_conf.py"
+    if not os.path.exists(os.path.join(backend_dir, conf_path)):
+        conf_path = os.path.join(os.path.dirname(backend_dir), "gunicorn_conf.py")
+
     cmd = [
         "gunicorn",
         "-k",
@@ -30,9 +37,9 @@ def main():
         "4",
         "server:app",
         "-b",
-        "0.0.0.0:8000",
+        f"0.0.0.0:{port}",
         "--config",
-        "gunicorn_conf.py",
+        conf_path,
     ]
 
     # Append any extra CLI args passed to this script

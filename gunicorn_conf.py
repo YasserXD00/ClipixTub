@@ -2,7 +2,10 @@
 # Use this config file when calling gunicorn from the `backend/` directory,
 # or pass an absolute path to this file.
 
-bind = "0.0.0.0:8000"
+import os
+
+port = os.environ.get("PORT", "8000")
+bind = f"0.0.0.0:{port}"
 workers = 4
 worker_class = "uvicorn.workers.UvicornWorker"
 timeout = 120
